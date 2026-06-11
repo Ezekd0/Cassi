@@ -1,0 +1,26 @@
+# Virtual environment
+venv/
+ENV/
+env/
+
+# Python compiled files
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+
+# Django local databases & assets
+cassie_marketplace/db.sqlite3
+cassie_marketplace/media/
+cassie_marketplace/staticfiles/
+
+# Frontend dependencies and builds
+cassie_marketplace/frontend/node_modules/
+cassie_marketplace/frontend/dist/
+cassie_marketplace/frontend/.env.local
+cassie_marketplace/frontend/.env.development.local
+cassie_marketplace/frontend/.env.production.local
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,411 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ listing.title }} | Cassie Premium Hub{% endblock %}
+
+{% block og_tags %}
+<!-- Meta Open Graph (OG) Indexing Engine for Premium Social Media & WhatsApp Link Previews -->
+<meta property="og:title" content="{{ listing.title }} - Premium Showcase">
+<meta property="og:description" content="Price: ₦{{ listing.price|floatformat:2 }} | Location: {{ listing.region }}. Direct verified asset listing by Cassie.">
+<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ listing.main_image.url }}">
+<meta property="og:type" content="website">
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .glass-card {
+        background: rgba(22, 22, 26, 0.6);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 28px;
+    }
+    
+    .specs-highlight-card { 
+        border-left: 4px solid var(--brand-orange); 
+        background-color: rgba(255, 107, 0, 0.05); 
+        padding: 20px; 
+        border-radius: 16px; 
+        border-top: 1px solid rgba(255, 107, 0, 0.1);
+        border-right: 1px solid rgba(255, 107, 0, 0.1);
+        border-bottom: 1px solid rgba(255, 107, 0, 0.1);
+    }
+    
+    .hover-lift { transition: transform 0.25s, box-shadow 0.25s; }
+    .hover-lift:hover { 
+        transform: translateY(-4px); 
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important; 
+    }
+
+    /* Floating Admin Bar styling */
+    .admin-float-bar {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        left: 20px;
+        background: rgba(18, 18, 22, 0.9);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 107, 0, 0.4);
+        border-radius: 24px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+        padding: 15px 25px;
+        z-index: 1020;
+    }
+
+    /* "THE BEND" Related card style overrides */
+    .premium-card-bend {
+        background: rgba(25, 25, 30, 0.45);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 28px !important;
+        overflow: hidden;
+        transition: transform 0.25s;
+    }
+    .premium-card-bend:hover {
+        transform: translateY(-6px);
+        border-color: rgba(255, 107, 0, 0.3);
+    }
+    .soil-bend {
+        margin-top: -24px;
+        z-index: 2;
+        position: relative;
+        border-radius: 24px 24px 0 0 !important;
+        background: rgba(18, 18, 22, 0.9);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 1.25rem;
+    }
+
+    .rating-star-btn {
+        font-size: 1.5rem;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: color 0.1s;
+    }
+    .rating-star-btn:hover, .rating-star-btn.active {
+        color: #FFC107;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-5 {% if user.is_authenticated and user.is_staff %}pb-5 mb-5{% endif %}">
+    
+    <!-- Custom, Thumb-Friendly Persistent Back-Navigation Button -->
+    <div class="mb-4">
+        {% if listing.status == 'sold' %}
+            <a href="javascript:void(0);" onclick="goBack('{% url 'sold_showcase' %}')" class="btn btn-outline-light rounded-pill px-4 py-2.5 fw-bold text-decoration-none shadow-sm" style="border-color: rgba(255,255,255,0.15);">
+                <i class="bi bi-arrow-left-short fs-5 align-middle"></i> ← Back to Showcase
+            </a>
+        {% else %}
+            <a href="javascript:void(0);" onclick="goBack('{% url 'catalog_home' %}?category={{ listing.category }}')" class="btn btn-outline-light rounded-pill px-4 py-2.5 fw-bold text-decoration-none shadow-sm" style="border-color: rgba(255,255,255,0.15);">
+                <i class="bi bi-arrow-left-short fs-5 align-middle"></i> ← Back to Catalog
+            </a>
+        {% endif %}
+    </div>
+
+    <!-- Main Listing Details Layout -->
+    <div class="row g-4">
+        <!-- Media Visual Display Module -->
+        <div class="col-lg-7">
+            <div class="position-relative rounded-5 overflow-hidden shadow mb-3 bg-dark border border-secondary" style="border-radius: 32px !important;">
+                <img src="{{ listing.main_image.url }}" class="w-100 img-fluid" style="max-height: 520px; object-fit: cover;" alt="{{ listing.title }}">
+                <div class="position-absolute top-0 start-0 m-3 d-flex flex-column gap-2">
+                    <span class="badge bg-dark px-3 py-2 fs-6 shadow-sm border border-secondary text-capitalize">
+                        <i class="bi bi-geo-alt-fill text-orange"></i> {{ listing.region }}
+                    </span>
+                    {% if not listing.is_approved %}
+                        <span class="badge bg-warning text-dark px-3 py-2 fs-6 shadow-sm fw-bold border border-warning">
+                            <i class="bi bi-eye-slash-fill"></i> Unapproved Draft
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if listing.video_url %}
+            <div class="card p-4 border-0 glass-card text-light mt-3">
+                <h6 class="fw-bold mb-3"><i class="bi bi-play-circle-fill text-danger me-1"></i> Virtual Video Tour Walkthrough</h6>
+                <a href="{{ listing.video_url }}" target="_blank" class="btn btn-outline-danger w-100 fw-bold py-2.5 rounded-pill text-decoration-none">
+                    Launch Video Tour
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Conversion Transaction Block Module Panel -->
+        <div class="col-lg-5">
+            <div class="card border-0 p-4 shadow glass-card text-light h-100 d-flex flex-column" style="border-radius: 32px !important;">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-uppercase tracking-widest text-orange font-monospace fw-bold small" style="font-size: 0.75rem;">
+                        {{ listing.get_category_display }}
+                    </span>
+                    {% if listing.is_verified %}
+                        <span class="text-white fw-bold small">
+                            <i class="bi bi-patch-check-fill text-orange"></i> Verified Asset
+                        </span>
+                    {% endif %}
+                </div>
+                
+                <h1 class="fw-bold h3 text-white mb-2">{{ listing.title }}</h1>
+                
+                <!-- Average Star Rating Showcase -->
+                {% if avg_rating > 0 %}
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="text-warning fs-5"><i class="bi bi-star-fill"></i></span>
+                        <strong class="text-white fs-5">{{ avg_rating }}</strong>
+                        <span class="text-secondary">/ 5.0 ({{ reviews.count }} Client Rating{{ reviews.count|pluralize }})</span>
+                    </div>
+                {% endif %}
+
+                <!-- Dynamic Sat/Maps Interceptor Routing link -->
+                {% if listing.google_map_url %}
+                <div class="mb-3">
+                    <a href="{{ listing.google_map_url }}" target="_blank" class="d-flex align-items-center p-3 rounded-4 text-decoration-none border border-secondary hover-lift" style="background: rgba(255,255,255,0.03);">
+                        <div class="bg-orange text-white rounded-circle p-2 me-3 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                            <i class="bi bi-compass-fill"></i>
+                        </div>
+                        <div>
+                            <strong class="text-white d-block" style="font-size: 0.85rem;">View Inspection Map Directions</strong>
+                            <span class="text-secondary text-xs d-block" style="font-size: 0.75rem;">Tap to see exact satellite location</span>
+                        </div>
+                        <i class="bi bi-chevron-right ms-auto text-secondary"></i>
+                    </a>
+                </div>
+                {% endif %}
+                
+                <!-- Premium Price Container -->
+                <div class="p-3 rounded-4 my-2 border-start border-4 border-orange" style="background: rgba(255, 107, 0, 0.08);">
+                    <small class="text-secondary d-block text-uppercase font-monospace tracking-wider" style="font-size: 0.65rem;">Valuation Tag</small>
+                    <h2 class="text-orange fw-extrabold m-0">₦{{ listing.price|floatformat:2 }}</h2>
+                </div>
+
+                <!-- Polymorphic Specifications Matrix -->
+                <div class="specs-highlight-card my-2">
+                    <h6 class="fw-bold mb-2 text-white" style="font-size: 0.85rem;"><i class="bi bi-sliders text-orange me-1"></i> Asset Specifications Profile:</h6>
+                    
+                    {% if listing.category == 'suits' %}
+                        <p class="m-0 text-secondary small mb-1">👔 Size Dimension: <strong>{{ listing.suit_size|default:"Custom" }}</strong></p>
+                        <p class="m-0 text-secondary small mb-1">🧵 Fabric / Material: <strong>{{ listing.suit_material|default:"Wool / Cashmere" }}</strong></p>
+                        <p class="m-0 text-secondary small">✨ Pattern Style: <strong>{{ listing.suit_style|default:"Bespoke Tailoring" }}</strong></p>
+
+                    {% elif listing.category == 'vehicle' %}
+                        <p class="m-0 text-secondary small mb-1">📅 Model Year: <strong>{{ listing.car_year|default:"N/A" }}</strong> | ⚙️ Gear Transmission: <strong class="text-capitalize">{{ listing.car_transmission|default:"Automatic" }}</strong></p>
+                        {% if listing.car_cracks_faults %}
+                            <div class="mt-2 pt-2 border-top border-secondary text-light bg-dark p-2.5 rounded-3 border">
+                                <small class="fw-bold text-danger d-block mb-1"><i class="bi bi-exclamation-triangle-fill"></i> Physical Inspection & Diagnostics:</small>
+                                <span class="text-secondary small d-block font-monospace" style="line-height: 1.4;">{{ listing.car_cracks_faults }}</span>
+                            </div>
+                        {% else %}
+                            <small class="text-success d-block mt-2 font-monospace"><i class="bi bi-check-circle-fill"></i> Body Integrity Status: Zero structural cracks or system faults reported.</small>
+                        {% endif %}
+
+                    {% elif listing.category == 'property' %}
+                        <p class="m-0 text-secondary small mb-1">🛏️ Rooms Capacity: <strong>{{ listing.house_bedrooms|default:"N/A" }} Bedrooms</strong> | 📄 Legal Verification: <strong>{{ listing.house_document|default:"Verified Title" }}</strong></p>
+                        {% if listing.house_condition_integrity %}
+                            <div class="mt-2 pt-2 border-top border-secondary text-light bg-dark p-2.5 rounded-3 border">
+                                <small class="fw-bold text-orange d-block mb-1"><i class="bi bi-building-gear"></i> Structural Integrity Log:</small>
+                                <span class="text-secondary small d-block" style="line-height: 1.4;">{{ listing.house_condition_integrity }}</span>
+                            </div>
+                        {% endif %}
+
+                    {% elif listing.category == 'soaked' %}
+                        <p class="m-0 text-secondary small">🎨 Original Canvas Medium: <strong>{{ listing.art_medium|default:"Oil on Canvas" }}</strong> | ✨ Frame Style: <strong>Premium Showcase Shadowbox Frame</strong></p>
+                    {% endif %}
+                </div>
+
+                <h6 class="fw-bold text-white mt-3 mb-1" style="font-size: 0.85rem;">Description Details:</h6>
+                <p class="text-secondary small mb-4" style="white-space: pre-line; line-height: 1.5;">{{ listing.description }}</p>
+
+                <!-- Double-Action Mobile Conversion Panel -->
+                <div class="p-3 rounded-4 border border-secondary mt-auto" style="background: rgba(255,255,255,0.02);">
+                    {% if listing.status == 'available' %}
+                        <p class="text-center fw-bold text-white mb-2 small"><i class="bi bi-lightning-charge-fill text-orange"></i> Connect with Agent Instantly</p>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <a href="{{ whatsapp_link }}" target="_blank" class="btn btn-orange w-100 py-3 rounded-pill d-flex flex-column align-items-center justify-content-center shadow-sm text-decoration-none">
+                                    <i class="bi bi-whatsapp fs-5 mb-1"></i>
+                                    <span class="small uppercase tracking-wider fw-bold" style="font-size: 0.65rem;">WhatsApp Chat</span>
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <a href="{{ phone_dial_link }}" class="btn btn-outline-light w-100 py-3 rounded-pill d-flex flex-column align-items-center justify-content-center shadow-sm text-decoration-none">
+                                    <i class="bi bi-telephone-outbound fs-5 mb-1 text-orange"></i>
+                                    <span class="small uppercase tracking-wider fw-bold" style="font-size: 0.65rem;">Call Secure Line</span>
+                                </a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center">
+                            <div class="badge bg-secondary text-white w-100 py-3 rounded-pill border border-secondary fw-extrabold text-uppercase tracking-widest fs-6" style="background-color: #3e3e46 !important;">
+                                <i class="bi bi-bookmark-check-fill text-orange"></i> SOLD / SUCCESSFULLY DELIVERED
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Rating & Reviews Section (Sold items only) -->
+    {% if listing.status == 'sold' %}
+    <div class="row mt-5 pt-4">
+        <div class="col-lg-8 mx-auto">
+            <div class="card p-4 border-0 glass-card text-light">
+                <h4 class="fw-bold mb-4" style="font-family: var(--font-heading);"><i class="bi bi-chat-heart text-orange"></i> Client Reviews & Delivery Feedback</h4>
+                
+                <!-- Client review submissions form -->
+                <div class="mb-5 p-4 rounded-4 border border-secondary" style="background: rgba(255,255,255,0.02);">
+                    <h5 class="fw-bold mb-3" style="font-size: 1.05rem;">Leave Delivery Feedback</h5>
+                    <form action="{% url 'submit_review' listing.slug %}" method="POST">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small text-secondary">Your Name</label>
+                                <input type="text" name="reviewer_name" class="form-control bg-dark border-secondary text-white rounded-pill px-3" placeholder="e.g. Chief Victor" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small text-secondary">Star Rating</label>
+                                <select name="rating" class="form-select bg-dark border-secondary text-white rounded-pill px-3" required>
+                                    <option value="5">⭐⭐⭐⭐⭐ (5 Stars)</option>
+                                    <option value="4">⭐⭐⭐⭐ (4 Stars)</option>
+                                    <option value="3">⭐⭐⭐ (3 Stars)</option>
+                                    <option value="2">⭐⭐ (2 Stars)</option>
+                                    <option value="1">⭐ (1 Star)</option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small text-secondary">Review Comments</label>
+                                <textarea name="comment" class="form-control bg-dark border-secondary text-white rounded-4 p-3" rows="3" placeholder="Share your experience working with Cassie..." required></textarea>
+                            </div>
+                            <div class="col-12 text-end">
+                                <button type="submit" class="btn btn-orange rounded-pill px-4 py-2 small fw-bold">Submit Review</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- List of reviews -->
+                <div class="reviews-list">
+                    <h5 class="fw-bold mb-3">Client Testimony List ({{ reviews.count }})</h5>
+                    {% for review in reviews %}
+                        <div class="p-3 mb-3 border border-secondary rounded-4 position-relative" style="background: rgba(255,255,255,0.015);">
+                            
+                            <!-- Delete review button for Admin moderation -->
+                            {% if user.is_authenticated and user.is_staff %}
+                                <a href="{% url 'delete_review' review.id %}" class="btn btn-danger btn-sm rounded-circle position-absolute top-0 end-0 m-3 border-0 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;" onclick="return confirm('Moderate/Delete this review?');" title="Moderate Review">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </a>
+                            {% endif %}
+
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <strong class="text-white">{{ review.reviewer_name }}</strong>
+                                <span class="text-warning small">
+                                    {% if review.rating == 5 %}⭐⭐⭐⭐⭐
+                                    {% elif review.rating == 4 %}⭐⭐⭐⭐
+                                    {% elif review.rating == 3 %}⭐⭐⭐
+                                    {% elif review.rating == 2 %}⭐⭐
+                                    {% else %}⭐
+                                    {% endif %}
+                                </span>
+                                <small class="text-secondary ms-auto font-monospace">{{ review.created_at|date:"M d, Y" }}</small>
+                            </div>
+                            <p class="text-secondary small m-0" style="color: #CCCCCC !important; white-space: pre-wrap;">{{ review.comment }}</p>
+                        </div>
+                    {% empty %}
+                        <p class="text-secondary small italic text-center py-4">No client testimony logged yet. Be the first to share your feedback!</p>
+                    {% endfor %}
+                </div>
+
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Related Cross-Selling Component: Discover More -->
+    <div class="row mt-5 pt-4">
+        <h4 class="fw-bold text-white mb-4" style="font-family: var(--font-heading);"><i class="bi bi-compass-fill text-orange"></i> Discover More Exclusive Deals</h4>
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+            {% for deal in similar_deals %}
+            <div class="col">
+                <div class="premium-card-bend position-relative h-100">
+                    <div class="position-relative overflow-hidden" style="height: 180px; border-radius: 28px 28px 0 0;">
+                        <img src="{{ deal.main_image.url }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ deal.title }}">
+                        <span class="position-absolute bottom-0 start-0 m-3 badge bg-dark px-2.5 py-1.5 shadow-sm small border border-secondary" style="z-index: 10;">
+                            <i class="bi bi-geo-alt-fill text-orange"></i> {{ deal.region }}
+                        </span>
+                    </div>
+                    <div class="soil-bend">
+                        <small class="text-orange font-monospace text-uppercase fw-bold" style="font-size: 0.65rem;">{{ deal.get_category_display }}</small>
+                        <h6 class="card-title fw-bold text-white text-truncate my-1" style="font-size: 0.95rem;">{{ deal.title }}</h6>
+                        <p class="text-orange small fw-bold mb-3">₦{{ deal.price|floatformat:2 }}</p>
+                        <a href="{% url 'listing_detail' deal.slug %}" class="btn btn-sm btn-orange w-100 py-2 rounded-pill fw-bold text-decoration-none" style="font-size: 0.75rem;">View Showcase</a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center">
+                <p class="text-secondary small">No other active deals found at the moment.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Floating Manager/Super Admin Action Toolbar -->
+{% if user.is_authenticated and user.is_staff %}
+<div class="admin-float-bar">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-orange text-white text-uppercase px-2.5 py-1.5" style="font-size: 0.7rem;">
+                <i class="bi bi-shield-check"></i> Manager Console
+            </span>
+            <span class="text-white small fw-bold text-truncate" style="max-width: 180px;">{{ listing.title }}</span>
+        </div>
+        
+        <!-- Action buttons group -->
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <!-- Approval switch -->
+            {% if not listing.is_approved %}
+                <a href="{% url 'approve_listing' listing.slug %}" class="btn btn-success btn-sm rounded-pill px-3 fw-bold border-0">
+                    <i class="bi bi-check-circle-fill"></i> Approve
+                </a>
+            {% else %}
+                <span class="badge bg-success px-3 py-1.5 rounded-pill"><i class="bi bi-eye-fill"></i> Live on Site</span>
+            {% endif %}
+            
+            <!-- Category mover selector -->
+            <form action="{% url 'change_category' listing.slug %}" method="POST" class="d-flex align-items-center gap-1 my-0">
+                {% csrf_token %}
+                <select name="category" class="form-select form-select-sm bg-dark text-white border-secondary rounded-pill" style="width: 130px; font-size: 0.8rem;" onchange="this.form.submit()">
+                    {% for cat_val, cat_lbl in category_choices %}
+                        <option value="{{ cat_val }}" {% if listing.category == cat_val %}selected{% endif %}>Move to {{ cat_lbl }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+
+            <a href="{% url 'admin:catalog_listing_change' listing.id %}" target="_blank" class="btn btn-outline-light btn-sm rounded-pill px-3 border-secondary">
+                <i class="bi bi-pencil-square"></i> Edit Specs
+            </a>
+            
+            <a href="{% url 'delete_listing' listing.slug %}" class="btn btn-danger btn-sm rounded-pill px-3 border-0 fw-bold" onclick="return confirm('Are you sure you want to permanently delete this listing?');">
+                <i class="bi bi-trash3-fill"></i> Delete
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+    // Safe Back navigation routine to prevent trapping users or breaking browser history
+    function goBack(fallbackUrl) {
+        if (document.referrer && document.referrer.indexOf(window.location.host) !== -1) {
+            history.back();
+        } else {
+            window.location.href = fallbackUrl;
+        }
+    }
+</script>
+{% endblock %}

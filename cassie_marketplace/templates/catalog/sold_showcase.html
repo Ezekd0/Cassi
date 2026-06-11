@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block extra_head %}
+<style>
+    /* Premium Glassmorphic Card Lift Actions */
+    .premium-card-bend {
+        background: rgba(25, 25, 30, 0.45);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s;
+        border-radius: 32px !important;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    
+    .premium-card-bend:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 1px 1px rgba(255, 107, 0, 0.3);
+        border-color: rgba(255, 107, 0, 0.25);
+    }
+
+    /* "THE BEND" - Curved overlapping text base separating from image */
+    .soil-bend {
+        margin-top: -28px;
+        z-index: 2;
+        position: relative;
+        border-radius: 28px 28px 0 0 !important;
+        background: rgba(18, 18, 22, 0.88);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 1.5rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .category-badge-pills {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-muted);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+    .category-badge-pills:hover {
+        background: rgba(255, 107, 0, 0.1);
+        color: #FFFFFF;
+        border-color: rgba(255, 107, 0, 0.4);
+    }
+    .category-badge-pills.active {
+        background: var(--brand-orange);
+        color: #FFFFFF;
+        border-color: var(--brand-orange);
+        box-shadow: 0 5px 15px rgba(255, 107, 0, 0.35);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    
+    <!-- Hero Header Unit -->
+    <div class="text-center mb-5">
+        <h1 class="display-5 fw-extrabold text-white mb-2" style="font-family: var(--font-heading); font-weight: 800;">
+            Sold Portfolio
+        </h1>
+        <p class="text-secondary mx-auto" style="max-width: 600px; color: var(--text-muted) !important;">
+            A public gallery of successfully delivered luxury assets proving our business legitimacy, client trust, and transaction record.
+        </p>
+        
+        <!-- Navigation Categories/Tabs -->
+        <div class="d-flex justify-content-center gap-2 mt-4 flex-wrap">
+            <a href="?" class="btn btn-sm category-badge-pills rounded-pill px-4 py-2 {% if not selected_category %}active{% endif %}">
+                <i class="bi bi-grid-fill me-1"></i> All Delivered
+            </a>
+            <a href="?category=suits" class="btn btn-sm category-badge-pills rounded-pill px-4 py-2 {% if selected_category == 'suits' %}active{% endif %}">
+                👔 Suits
+            </a>
+            <a href="?category=soaked" class="btn btn-sm category-badge-pills rounded-pill px-4 py-2 {% if selected_category == 'soaked' %}active{% endif %}">
+                🎨 Soaked
+            </a>
+            <a href="?category=property" class="btn btn-sm category-badge-pills rounded-pill px-4 py-2 {% if selected_category == 'property' %}active{% endif %}">
+                🏠 Houses
+            </a>
+            <a href="?category=vehicle" class="btn btn-sm category-badge-pills rounded-pill px-4 py-2 {% if selected_category == 'vehicle' %}active{% endif %}">
+                🚘 Cars
+            </a>
+        </div>
+    </div>
+
+    <!-- Core Dynamic Cards Matrix Grid with "The Bend" design -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for listing in listings %}
+        <div class="col">
+            <div class="premium-card-bend position-relative">
+                
+                <!-- Image Container with Rounded Top Corners -->
+                <div class="position-relative overflow-hidden" style="height: 240px; border-radius: 32px 32px 0 0;">
+                    <img src="{{ listing.main_image.url }}" class="w-100 h-100" style="object-fit: cover; opacity: 0.45; transition: transform 0.5s ease;" alt="{{ listing.title }}">
+                    
+                    <!-- Top Status Flags -->
+                    <div class="position-absolute top-0 start-0 m-3 d-flex flex-column gap-2">
+                        <span class="badge bg-secondary text-white text-uppercase px-3 py-2 shadow fw-bold border border-secondary" style="font-size: 0.7rem; background-color: #3e3e46 !important;">
+                            <i class="bi bi-bookmark-check-fill text-orange"></i> Successfully Delivered
+                        </span>
+                        {% if not listing.is_approved %}
+                            <span class="badge bg-warning text-dark text-uppercase px-3 py-2 shadow fw-bold border border-warning" style="font-size: 0.7rem;">
+                                Unapproved Draft
+                            </span>
+                        {% endif %}
+                    </div>
+                    
+                    <span class="position-absolute bottom-0 start-0 m-3 mb-4 badge bg-dark px-2.5 py-1.5 shadow-sm small border border-secondary" style="z-index: 10;">
+                        <i class="bi bi-geo-alt-fill text-orange"></i> {{ listing.region }}
+                    </span>
+                </div>
+
+                <!-- "THE SOIL" Curved Overlapping Text Area -->
+                <div class="soil-bend">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <small class="text-uppercase tracking-widest text-orange font-monospace fw-bold" style="font-size: 0.7rem;">
+                            {{ listing.get_category_display }}
+                        </small>
+                        
+                        <!-- Star Ratings on Card -->
+                        {% if listing.reviews.exists %}
+                            <span class="text-warning small fw-bold">
+                                <i class="bi bi-star-fill"></i> {{ listing.average_rating }} ({{ listing.reviews.count }} Review{{ listing.reviews.count|pluralize }})
+                            </span>
+                        {% else %}
+                            <span class="text-muted small">
+                                <i class="bi bi-star"></i> No Reviews
+                            </span>
+                        {% endif %}
+                    </div>
+                    
+                    <h5 class="fw-bold text-white my-2 text-truncate" title="{{ listing.title }}">
+                        {{ listing.title }}
+                    </h5>
+                    
+                    <h4 class="text-orange fw-bold mb-3">₦{{ listing.price|floatformat:2 }}</h4>
+                    
+                    <p class="text-secondary small mb-4" style="line-height: 1.5; color: #8E8E93 !important; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                        {{ listing.description }}
+                    </p>
+                    
+                    <div class="mt-auto">
+                        <a href="{% url 'listing_detail' listing.slug %}" class="btn btn-orange w-100 py-2.5 rounded-pill text-uppercase font-monospace tracking-wide small shadow-sm d-flex align-items-center justify-content-center">
+                            View Portfolio Details <i class="bi bi-arrow-right-short fs-5 ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center my-5 py-5">
+            <i class="bi bi-check2-all text-muted display-3 text-orange"></i>
+            <p class="text-secondary mt-3">No delivered listings cataloged inside this vertical yet.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
