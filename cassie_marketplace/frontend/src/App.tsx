@@ -52,6 +52,7 @@ function App() {
   const [user, setUser] = useState<UserSession>({ isAuthenticated: false, role: 'visitor' })
   const [loadingAuth, setLoadingAuth] = useState(true)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [category, setCategory] = useState<string>('')
 
   // --- Get Notified Subscription State ---
   const [subscribeVal, setSubscribeVal] = useState('')
@@ -162,10 +163,10 @@ function App() {
     }
 
     if (path === '/' || path === '') {
-      return <Home navigate={navigate} />
+      return <Home category={category} setCategory={setCategory} navigate={navigate} />
     }
     if (path === '/sold') {
-      return <SoldPortfolio navigate={navigate} />
+      return <SoldPortfolio category={category} setCategory={setCategory} navigate={navigate} />
     }
     if (path === '/hidden-admin-portal') {
       return <Login user={user} setUser={setUser} navigate={navigate} />
@@ -210,16 +211,40 @@ function App() {
           {/* Desktop Navigation Links */}
           <nav className="nav-links desktop-only">
             <span 
-              className={`nav-item ${path === '/' ? 'active-primary' : ''}`} 
-              onClick={() => navigate('/')}
+              className={`nav-item ${path === '/' && category === '' ? 'active-primary' : ''}`} 
+              onClick={() => { setCategory(''); navigate('/') }}
             >
               Showroom
+            </span>
+            <span 
+              className={`nav-item ${path === '/' && category === 'vehicle' ? 'active-primary' : ''}`} 
+              onClick={() => { setCategory('vehicle'); navigate('/') }}
+            >
+              Cars
+            </span>
+            <span 
+              className={`nav-item ${path === '/' && category === 'property' ? 'active-primary' : ''}`} 
+              onClick={() => { setCategory('property'); navigate('/') }}
+            >
+              Real Estate
+            </span>
+            <span 
+              className={`nav-item ${path === '/' && category === 'suits' ? 'active-primary' : ''}`} 
+              onClick={() => { setCategory('suits'); navigate('/') }}
+            >
+              Suits
+            </span>
+            <span 
+              className={`nav-item ${path === '/' && category === 'soaked' ? 'active-primary' : ''}`} 
+              onClick={() => { setCategory('soaked'); navigate('/') }}
+            >
+              Soaked
             </span>
             <span 
               className={`nav-item ${path === '/sold' ? 'active-primary' : ''}`} 
               onClick={() => navigate('/sold')}
             >
-              Delivered Showcase
+              Sold Portfolio
             </span>
             
             {user.isAuthenticated && (
@@ -256,16 +281,40 @@ function App() {
         {menuOpen && (
           <div className="mobile-nav-drawer">
             <span 
-              className={`mobile-nav-item ${path === '/' ? 'active' : ''}`} 
-              onClick={() => navigate('/')}
+              className={`mobile-nav-item ${path === '/' && category === '' ? 'active' : ''}`} 
+              onClick={() => { setCategory(''); navigate('/') }}
             >
               Showroom
+            </span>
+            <span 
+              className={`mobile-nav-item ${path === '/' && category === 'vehicle' ? 'active' : ''}`} 
+              onClick={() => { setCategory('vehicle'); navigate('/') }}
+            >
+              Cars
+            </span>
+            <span 
+              className={`mobile-nav-item ${path === '/' && category === 'property' ? 'active' : ''}`} 
+              onClick={() => { setCategory('property'); navigate('/') }}
+            >
+              Real Estate
+            </span>
+            <span 
+              className={`mobile-nav-item ${path === '/' && category === 'suits' ? 'active' : ''}`} 
+              onClick={() => { setCategory('suits'); navigate('/') }}
+            >
+              Suits
+            </span>
+            <span 
+              className={`mobile-nav-item ${path === '/' && category === 'soaked' ? 'active' : ''}`} 
+              onClick={() => { setCategory('soaked'); navigate('/') }}
+            >
+              Soaked
             </span>
             <span 
               className={`mobile-nav-item ${path === '/sold' ? 'active' : ''}`} 
               onClick={() => navigate('/sold')}
             >
-              Delivered Showcase
+              Sold Portfolio
             </span>
             {user.isAuthenticated && (
               <>
@@ -351,15 +400,16 @@ function App() {
 // ==========================================
 // 1. HOME VIEW (Active Listings Showroom)
 // ==========================================
-interface PageProps {
-  user?: UserSession;
+interface HomeProps {
+  category: string;
+  setCategory: (cat: string) => void;
   navigate: (to: string) => void;
 }
 
-function Home({ navigate }: PageProps) {
+function Home({ category, setCategory, navigate }: HomeProps) {
   const [listings, setListings] = useState<Listing[]>([])
-  const [category, setCategory] = useState<string>('')
   const [loading, setLoading] = useState(true)
+  const [announcementOpen, setAnnouncementOpen] = useState(true)
 
   useEffect(() => {
     setLoading(true)
@@ -404,6 +454,20 @@ function Home({ navigate }: PageProps) {
           Curated collection of high-ticket assets and premium items.
         </p>
       </section>
+
+      {announcementOpen && (
+        <div className="announcement-pop-card">
+          <div className="announcement-content">
+            <span className="announcement-badge-pill">Sourcing Update</span>
+            <p className="announcement-message">
+              ✨ <strong>Sourcing Drops:</strong> Prime land plots in Osongama, Uyo, premium cars, and tailored Italian suits are now live. Inquire directly on WhatsApp.
+            </p>
+          </div>
+          <button className="announcement-close-btn" onClick={() => setAnnouncementOpen(false)} aria-label="Dismiss Announcement">
+            &times;
+          </button>
+        </div>
+      )}
 
       {/* Tabs Menu */}
       <div className="tabs-container">
@@ -457,9 +521,14 @@ function Home({ navigate }: PageProps) {
 // ==========================================
 // 2. DELIVERED SHOWCASE (Sold Listings)
 // ==========================================
-function SoldPortfolio({ navigate }: PageProps) {
+interface SoldPortfolioProps {
+  category: string;
+  setCategory: (cat: string) => void;
+  navigate: (to: string) => void;
+}
+
+function SoldPortfolio({ category, setCategory, navigate }: SoldPortfolioProps) {
   const [listings, setListings] = useState<Listing[]>([])
-  const [category, setCategory] = useState<string>('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -743,8 +812,17 @@ function Detail({ slug, navigate }: DetailProps) {
     return (
       <div className="detail-container">
         <div className="back-nav-bar">
-          <button onClick={() => navigate('/')} className="btn-back-nav">
-            ← Back to Showroom
+          <button 
+            onClick={() => {
+              if (window.history.length > 1) {
+                window.history.back()
+              } else {
+                navigate('/')
+              }
+            }} 
+            className="btn-back-nav"
+          >
+            ← Back
           </button>
         </div>
         <div className="empty-state">
@@ -768,15 +846,15 @@ function Detail({ slug, navigate }: DetailProps) {
       <div className="back-nav-bar">
         <button 
           onClick={() => {
-            if (listing.status === 'sold') {
-              navigate('/sold')
+            if (window.history.length > 1) {
+              window.history.back()
             } else {
-              navigate('/')
+              navigate(listing.status === 'sold' ? '/sold' : '/')
             }
           }} 
           className="btn-back-nav"
         >
-          ← Back to {listing.status === 'sold' ? 'Delivered Showcase' : 'Marketplace Catalog'}
+          ← Back
         </button>
       </div>
 
@@ -1065,7 +1143,7 @@ function Detail({ slug, navigate }: DetailProps) {
       {similar_deals.length > 0 && (
         <section className="discover-section">
           <h2 className="discover-title">Discover More Premium Offers</h2>
-          <div className="listings-grid">
+          <div className="listings-grid swipeable-row">
             {similar_deals.map(item => (
               <ListingCard key={item.id} listing={item} onClick={() => navigate(`/listings/${item.slug}`)} />
             ))}
