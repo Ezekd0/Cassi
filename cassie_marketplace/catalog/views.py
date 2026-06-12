@@ -3,7 +3,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse, HttpResponseForbidden, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404
-from .models import Listing, Review
+from .models import Listing, Review, Subscription
 
 def serialize_listing(listing):
     return {
@@ -210,3 +210,27 @@ def api_delete_review(request, review_id):
     review = get_object_or_404(Review, id=review_id)
     review.delete()
     return JsonResponse({'success': True})
+
+
+@csrf_exempt
+def api_subscribe(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            contact_info = data.get('contact_info')
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON body'}, status=400)
+
+        if contact_info:
+            subscription = Subscription.objects.create(contact_info=contact_info)
+            return JsonResponse({
+                'success': True,
+                'subscription': {
+                    'id': subscription.id,
+                    'contact_info': subscription.contact_info,
+                    'created_at': subscription.created_at.isoformat()
+                }
+            })
+        return JsonResponse({'error': 'Contact info is required'}, status=400)
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+

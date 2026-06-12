@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Listing, Review
+from .models import Listing, Review, Subscription
 
 @admin.register(Listing)
 class ListingAdmin(admin.ModelAdmin):
@@ -130,3 +130,11 @@ class ReviewAdmin(admin.ModelAdmin):
     list_display = ('reviewer_name', 'listing', 'rating', 'created_at')
     list_filter = ('rating', 'created_at')
     search_fields = ('reviewer_name', 'comment', 'listing__title')
+
+
+@admin.register(Subscription)
+class SubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('contact_info', 'created_at')
+    list_filter = ('created_at',)
+    search_fields = ('contact_info',)
+

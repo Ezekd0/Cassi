@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
 from io import BytesIO
-from .models import Listing, Review
+from .models import Listing, Review, Subscription
 from .admin import ListingAdmin
 from django.contrib.admin.sites import AdminSite
 
@@ -261,3 +261,26 @@ class ListingTestCase(TestCase):
         response = self.client.get(delete_url)
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Listing.objects.filter(id=self.draft_listing.id).exists())
+
+    def test_subscription(self):
+        import json
+        sub_data = {
+            'contact_info': 'victor_test@cassi.com'
+        }
+        response = self.client.post(
+            reverse('api_subscribe'),
+            json.dumps(sub_data),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Subscription.objects.count(), 1)
+        self.assertEqual(Subscription.objects.first().contact_info, 'victor_test@cassi.com')
+
+        # Test invalid subscription payload
+        response = self.client.post(
+            reverse('api_subscribe'),
+            json.dumps({}),
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 400)
+

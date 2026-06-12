@@ -51,6 +51,38 @@ function App() {
   const [path, setPath] = useState(window.location.pathname)
   const [user, setUser] = useState<UserSession>({ isAuthenticated: false, role: 'visitor' })
   const [loadingAuth, setLoadingAuth] = useState(true)
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  // --- Get Notified Subscription State ---
+  const [subscribeVal, setSubscribeVal] = useState('')
+  const [subscribing, setSubscribing] = useState(false)
+  const [subscribeMsg, setSubscribeMsg] = useState('')
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!subscribeVal) return
+    setSubscribing(true)
+    setSubscribeMsg('')
+    try {
+      const res = await fetch('/api/subscribe/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contact_info: subscribeVal }),
+        credentials: 'include'
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        setSubscribeMsg('✓ You are subscribed to new drops!')
+        setSubscribeVal('')
+      } else {
+        setSubscribeMsg(data.error || 'Failed to subscribe.')
+      }
+    } catch (err) {
+      setSubscribeMsg('Network error. Please try again.')
+    } finally {
+      setSubscribing(false)
+    }
+  }
 
   // Listen to popstate event for back/forward browser navigation
   useEffect(() => {
@@ -64,6 +96,7 @@ function App() {
   const navigate = (to: string) => {
     window.history.pushState(null, '', to)
     setPath(to)
+    setMenuOpen(false)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -129,10 +162,10 @@ function App() {
     }
 
     if (path === '/' || path === '') {
-      return <Home user={user} navigate={navigate} />
+      return <Home navigate={navigate} />
     }
     if (path === '/sold') {
-      return <SoldPortfolio user={user} navigate={navigate} />
+      return <SoldPortfolio navigate={navigate} />
     }
     if (path === '/admin/login') {
       return <Login user={user} setUser={setUser} navigate={navigate} />
@@ -171,7 +204,8 @@ function App() {
             CASSIE<span className="logo-accent">HUB</span>
           </div>
 
-          <nav className="nav-links">
+          {/* Desktop Navigation Links */}
+          <nav className="nav-links desktop-only">
             <span 
               className={`nav-item ${path === '/' ? 'active-primary' : ''}`} 
               onClick={() => navigate('/')}
@@ -185,7 +219,7 @@ function App() {
               Delivered Showcase
             </span>
             
-            {user.isAuthenticated ? (
+            {user.isAuthenticated && (
               <>
                 <span className="nav-item" style={{ color: 'var(--primary)', cursor: 'default' }}>
                   👤 {user.username} ({user.role})
@@ -194,17 +228,52 @@ function App() {
                   Logout
                 </button>
               </>
-            ) : (
-              <button className="btn-login" onClick={() => navigate('/admin/login')}>
-                Manager Login
-              </button>
             )}
           </nav>
+
+          {/* Mobile Hamburger Button */}
+          <button 
+            className={`hamburger-btn mobile-only ${menuOpen ? 'open' : ''}`} 
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Toggle navigation menu"
+          >
+            <span className="hamburger-line"></span>
+            <span className="hamburger-line"></span>
+            <span className="hamburger-line"></span>
+          </button>
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        {menuOpen && (
+          <div className="mobile-nav-drawer">
+            <span 
+              className={`mobile-nav-item ${path === '/' ? 'active' : ''}`} 
+              onClick={() => navigate('/')}
+            >
+              Showroom
+            </span>
+            <span 
+              className={`mobile-nav-item ${path === '/sold' ? 'active' : ''}`} 
+              onClick={() => navigate('/sold')}
+            >
+              Delivered Showcase
+            </span>
+            {user.isAuthenticated && (
+              <>
+                <div className="mobile-user-info">
+                  👤 {user.username} ({user.role})
+                </div>
+                <button className="btn-login" onClick={handleLogout} style={{ width: '100%', marginTop: '12px' }}>
+                  Logout
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </header>
 
       {/* Page Body */}
-      <main style={{ flex: 1 }}>
+      <main style={{ flex: 1, paddingTop: '75px' }}>
         {renderRoute()}
       </main>
 
@@ -217,6 +286,27 @@ function App() {
           <p className="footer-pitch">
             High-ticket asset sourcing, expert tailoring, fine arts, and luxury property marketing. Hand-vetted and custom delivered.
           </p>
+
+          {/* "Get Notified" Premium Newsletter Capture Form */}
+          <div className="footer-subscribe-box">
+            <h3 className="subscribe-title">GET NOTIFIED ON NEW DROPS</h3>
+            <p className="subscribe-desc">Subscribe to WhatsApp or Email alerts for exclusive properties, vehicles, and tailored suits.</p>
+            <form onSubmit={handleSubscribe} className="subscribe-form">
+              <input
+                type="text"
+                placeholder="Email or WhatsApp number"
+                value={subscribeVal}
+                onChange={e => setSubscribeVal(e.target.value)}
+                className="subscribe-input"
+                required
+              />
+              <button type="submit" className="subscribe-btn" disabled={subscribing}>
+                {subscribing ? "Subscribing..." : "Notify Me"}
+              </button>
+            </form>
+            {subscribeMsg && <p className="subscribe-msg">{subscribeMsg}</p>}
+          </div>
+
           <div className="footer-social-nodes">
             <a href="https://facebook.com" className="social-node-btn" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
               <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
@@ -280,6 +370,17 @@ function Home({ navigate }: PageProps) {
     { label: 'Cars', value: 'vehicle' }
   ]
 
+  const categories = [
+    { id: 'suits', name: 'Exclusive Suits', icon: '👔' },
+    { id: 'soaked', name: 'Soaked (Fine Art)', icon: '🎨' },
+    { id: 'property', name: 'Houses & Plots', icon: '🏠' },
+    { id: 'vehicle', name: 'Premium Cars', icon: '🚘' }
+  ]
+
+  const renderedCategories = category
+    ? [{ id: category, name: tabs.find(t => t.value === category)?.label || category, icon: '' }]
+    : categories;
+
   return (
     <div>
       <section className="hero-section">
@@ -318,11 +419,20 @@ function Home({ navigate }: PageProps) {
             <p className="empty-state-text">There are currently no items available in this category.</p>
           </div>
         ) : (
-          <div className="listings-grid">
-            {listings.map(item => (
-              <ListingCard key={item.id} listing={item} onClick={() => navigate(`/listings/${item.slug}`)} />
-            ))}
-          </div>
+          renderedCategories.map(cat => {
+            const catListings = category ? listings : listings.filter(item => item.category === cat.id);
+            if (catListings.length === 0) return null;
+            return (
+              <div key={cat.id} className="category-group-section">
+                <h2 className="category-section-title">{cat.icon} {cat.name}</h2>
+                <div className="listings-grid swipeable-row">
+                  {catListings.map(item => (
+                    <ListingCard key={item.id} listing={item} onClick={() => navigate(`/listings/${item.slug}`)} />
+                  ))}
+                </div>
+              </div>
+            )
+          })
         )}
       </div>
     </div>
@@ -359,6 +469,17 @@ function SoldPortfolio({ navigate }: PageProps) {
     { label: 'Houses', value: 'property' },
     { label: 'Cars', value: 'vehicle' }
   ]
+
+  const categories = [
+    { id: 'suits', name: 'Exclusive Suits', icon: '👔' },
+    { id: 'soaked', name: 'Soaked (Fine Art)', icon: '🎨' },
+    { id: 'property', name: 'Houses & Plots', icon: '🏠' },
+    { id: 'vehicle', name: 'Premium Cars', icon: '🚘' }
+  ]
+
+  const renderedCategories = category
+    ? [{ id: category, name: tabs.find(t => t.value === category)?.label || category, icon: '' }]
+    : categories;
 
   return (
     <div>
@@ -398,11 +519,20 @@ function SoldPortfolio({ navigate }: PageProps) {
             <p className="empty-state-text">No listings marked as sold in this category yet.</p>
           </div>
         ) : (
-          <div className="listings-grid">
-            {listings.map(item => (
-              <ListingCard key={item.id} listing={item} onClick={() => navigate(`/listings/${item.slug}`)} />
-            ))}
-          </div>
+          renderedCategories.map(cat => {
+            const catListings = category ? listings : listings.filter(item => item.category === cat.id);
+            if (catListings.length === 0) return null;
+            return (
+              <div key={cat.id} className="category-group-section">
+                <h2 className="category-section-title">{cat.icon} {cat.name}</h2>
+                <div className="listings-grid swipeable-row">
+                  {catListings.map(item => (
+                    <ListingCard key={item.id} listing={item} onClick={() => navigate(`/listings/${item.slug}`)} />
+                  ))}
+                </div>
+              </div>
+            )
+          })
         )}
       </div>
     </div>

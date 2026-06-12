@@ -115,3 +115,15 @@ class Review(models.Model):
 
     def __str__(self):
         return f"Review ({self.rating}*) by {self.reviewer_name} on {self.listing.title}"
+
+
+class Subscription(models.Model):
+    contact_info = models.CharField(max_length=255, help_text="Email or WhatsApp number")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Subscription: {self.contact_info}"
+
