@@ -1126,7 +1126,7 @@ body {
 }
 
 .mobile-only {
-  display: none;
+  display: none !important;
 }
 
 /* Hamburger button styling */
@@ -1141,6 +1141,10 @@ body {
   height: 18px;
   padding: 0;
   z-index: 110;
+}
+
+.hamburger-btn:focus {
+  outline: none;
 }
 
 .hamburger-line {
