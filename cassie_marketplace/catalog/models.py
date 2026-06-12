@@ -40,6 +40,7 @@ class Listing(models.Model):
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='available')
     contact_phone = models.CharField(max_length=20, default="2348148714875")
     created_at = models.DateTimeField(auto_now_add=True)
+    view_count = models.IntegerField(default=0)
 
     # 🚗 Vehicles Exclusive
     car_year = models.IntegerField(blank=True, null=True)
@@ -126,4 +127,23 @@ class Subscription(models.Model):
 
     def __str__(self):
         return f"Subscription: {self.contact_info}"
+
+
+class TrafficCounter(models.Model):
+    total_views = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f"Global Views: {self.total_views}"
+
+
+class PageView(models.Model):
+    session_key = models.CharField(max_length=40, db_index=True)
+    timestamp = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"PageView by {self.session_key} at {self.timestamp}"
+
 

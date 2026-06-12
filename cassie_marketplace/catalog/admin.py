@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Listing, Review, Subscription
+from .models import Listing, Review, Subscription, TrafficCounter, PageView
 
 @admin.register(Listing)
 class ListingAdmin(admin.ModelAdmin):
@@ -137,4 +137,17 @@ class SubscriptionAdmin(admin.ModelAdmin):
     list_display = ('contact_info', 'created_at')
     list_filter = ('created_at',)
     search_fields = ('contact_info',)
+
+
+@admin.register(TrafficCounter)
+class TrafficCounterAdmin(admin.ModelAdmin):
+    list_display = ('total_views',)
+
+
+@admin.register(PageView)
+class PageViewAdmin(admin.ModelAdmin):
+    list_display = ('session_key', 'timestamp')
+    list_filter = ('timestamp',)
+    search_fields = ('session_key',)
+
 

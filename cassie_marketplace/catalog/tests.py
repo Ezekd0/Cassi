@@ -284,3 +284,39 @@ class ListingTestCase(TestCase):
         )
         self.assertEqual(response.status_code, 400)
 
+    def test_analytics_and_security(self):
+        # 1. View count increment
+        initial_views = self.approved_listing.view_count
+        detail_url = reverse('listing_detail', kwargs={'slug': self.approved_listing.slug})
+        response = self.client.get(detail_url)
+        self.assertEqual(response.status_code, 200)
+        self.approved_listing.refresh_from_db()
+        self.assertEqual(self.approved_listing.view_count, initial_views + 1)
+
+        # 2. Block guest from accessing analytics
+        analytics_url = reverse('api_analytics')
+        response = self.client.get(analytics_url)
+        self.assertEqual(response.status_code, 403)
+
+        # 3. Block guest from status toggle
+        toggle_url = reverse('toggle_status', kwargs={'slug': self.approved_listing.slug})
+        import json
+        response = self.client.post(toggle_url, json.dumps({'status': 'sold'}), content_type='application/json')
+        self.assertEqual(response.status_code, 403)
+
+        # 4. Authenticated manager can view analytics
+        self.client.login(username='cassie_test', password='testpassword')
+        response = self.client.get(analytics_url)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn('total_views', data)
+        self.assertIn('active_browsers', data)
+        self.assertIn('popular_listings', data)
+
+        # 5. Authenticated manager can toggle status
+        response = self.client.post(toggle_url, json.dumps({'status': 'sold'}), content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        self.approved_listing.refresh_from_db()
+        self.assertEqual(self.approved_listing.status, 'sold')
+
+

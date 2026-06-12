@@ -14,5 +14,8 @@ urlpatterns = [
     path('api/auth/logout/', views.api_logout, name='api_logout'),
     path('api/auth/me/', views.api_me, name='api_me'),
     path('api/subscribe/', views.api_subscribe, name='api_subscribe'),
+    path('api/analytics/', views.api_analytics, name='api_analytics'),
+    path('api/listings/<slug:slug>/toggle-status/', views.api_toggle_status, name='toggle_status'),
 ]
+
 

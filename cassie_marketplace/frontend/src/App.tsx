@@ -167,12 +167,15 @@ function App() {
     if (path === '/sold') {
       return <SoldPortfolio navigate={navigate} />
     }
-    if (path === '/admin/login') {
+    if (path === '/hidden-admin-portal') {
       return <Login user={user} setUser={setUser} navigate={navigate} />
+    }
+    if (path === '/admin-dashboard') {
+      return <Dashboard user={user} navigate={navigate} />
     }
     if (path.startsWith('/listings/')) {
       const slug = path.split('/')[2]
-      return <Detail slug={slug} user={user} navigate={navigate} />
+      return <Detail slug={slug} navigate={navigate} />
     }
 
     return (
@@ -221,6 +224,12 @@ function App() {
             
             {user.isAuthenticated && (
               <>
+                <span 
+                  className={`nav-item ${path === '/admin-dashboard' ? 'active-primary' : ''}`} 
+                  onClick={() => navigate('/admin-dashboard')}
+                >
+                  Dashboard
+                </span>
                 <span className="nav-item" style={{ color: 'var(--primary)', cursor: 'default' }}>
                   👤 {user.username} ({user.role})
                 </span>
@@ -260,6 +269,12 @@ function App() {
             </span>
             {user.isAuthenticated && (
               <>
+                <span 
+                  className={`mobile-nav-item ${path === '/admin-dashboard' ? 'active' : ''}`} 
+                  onClick={() => navigate('/admin-dashboard')}
+                >
+                  Dashboard
+                </span>
                 <div className="mobile-user-info">
                   👤 {user.username} ({user.role})
                 </div>
@@ -631,11 +646,10 @@ function ListingCard({ listing, onClick }: CardProps) {
 // ==========================================
 interface DetailProps {
   slug: string;
-  user: UserSession;
   navigate: (to: string) => void;
 }
 
-function Detail({ slug, user, navigate }: DetailProps) {
+function Detail({ slug, navigate }: DetailProps) {
   const [data, setData] = useState<{
     listing: Listing;
     reviews: Review[];
@@ -677,74 +691,7 @@ function Detail({ slug, user, navigate }: DetailProps) {
     fetchDetails()
   }, [slug])
 
-  // --- Manager Actions ---
-  const handleApprove = async () => {
-    if (!window.confirm("Approve this listing and push it to the public showroom?")) return;
-    try {
-      const res = await fetch(`/api/listings/${slug}/approve/`, { method: 'POST', credentials: 'include' })
-      const resData = await res.json()
-      if (resData.success) {
-        alert("Listing approved successfully!")
-        fetchDetails()
-      } else {
-        alert("Error: " + (resData.error || "Failed to approve"))
-      }
-    } catch (err) {
-      alert("Network request failed")
-    }
-  }
 
-  const handleDelete = async () => {
-    if (!window.confirm("⚠️ WARNING: Are you sure you want to permanently delete this listing?")) return;
-    try {
-      const res = await fetch(`/api/listings/${slug}/delete/`, { method: 'POST', credentials: 'include' })
-      const resData = await res.json()
-      if (resData.success) {
-        alert("Listing deleted successfully.")
-        navigate('/')
-      } else {
-        alert("Error: " + (resData.error || "Failed to delete"))
-      }
-    } catch (err) {
-      alert("Network request failed")
-    }
-  }
-
-  const handleCategoryChange = async (newCat: string) => {
-    try {
-      const res = await fetch(`/api/listings/${slug}/change-category/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category: newCat }),
-        credentials: 'include'
-      })
-      const resData = await res.json()
-      if (resData.success) {
-        alert(`Category changed to ${newCat}!`)
-        fetchDetails()
-      } else {
-        alert("Error: " + (resData.error || "Failed to change category"))
-      }
-    } catch (err) {
-      alert("Network request failed")
-    }
-  }
-
-  const handleDeleteReview = async (reviewId: number) => {
-    if (!window.confirm("Delete this user review?")) return;
-    try {
-      const res = await fetch(`/api/reviews/${reviewId}/delete/`, { method: 'POST', credentials: 'include' })
-      const resData = await res.json()
-      if (resData.success) {
-        alert("Review deleted successfully.")
-        fetchDetails()
-      } else {
-        alert("Error: " + (resData.error || "Failed to delete review"))
-      }
-    } catch (err) {
-      alert("Network request failed")
-    }
-  }
 
   // --- Submit Customer Review ---
   const handleReviewSubmit = async (e: React.FormEvent) => {
@@ -1042,16 +989,6 @@ function Detail({ slug, user, navigate }: DetailProps) {
                     </span>
                   </div>
                   <p className="review-comment">“{rev.comment}”</p>
-                  
-                  {/* Cassie/Admin review delete option */}
-                  {user.isAuthenticated && (
-                    <button 
-                      className="btn-delete-review" 
-                      onClick={() => handleDeleteReview(rev.id)}
-                    >
-                      Delete
-                    </button>
-                  )}
                 </div>
               ))
             )}
@@ -1136,50 +1073,456 @@ function Detail({ slug, user, navigate }: DetailProps) {
         </section>
       )}
 
-      {/* ROLE-BASED DYNAMIC MANAGER/ADMIN CONSOLE FLOATING BAR */}
-      {user.isAuthenticated && (
-        <div className="admin-bar">
-          <div className="admin-info">
-            <span className="admin-badge">{user.role}</span>
-            <span style={{ fontSize: '0.9rem', color: '#FFF', fontWeight: 600 }}>
-              Management Console (Control Desk)
-            </span>
+    </div>
+  )
+}
+
+// ==========================================
+// 3.5 ADMIN DASHBOARD VIEW
+// ==========================================
+interface DashboardProps {
+  user: UserSession;
+  navigate: (to: string) => void;
+}
+
+interface AnalyticsData {
+  total_views: number;
+  active_browsers: number;
+  popular_listings: Array<{
+    id: number;
+    title: string;
+    slug: string;
+    category: string;
+    price: number;
+    status: 'available' | 'sold';
+    view_count: number;
+    is_approved: boolean;
+  }>;
+  all_listings: Listing[];
+  all_reviews: Array<{
+    id: number;
+    listing_title: string;
+    listing_slug: string;
+    reviewer_name: string;
+    rating: number;
+    comment: string;
+    created_at: string;
+  }>;
+}
+
+const CATEGORY_LABELS: Record<string, string> = {
+  suits: 'Suits',
+  soaked: 'Soaked (Art)',
+  property: 'Houses',
+  vehicle: 'Cars'
+};
+
+function Dashboard({ user, navigate }: DashboardProps) {
+  const [data, setData] = useState<AnalyticsData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'overview' | 'reviews'>('overview')
+
+  const fetchAnalytics = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/analytics/', { credentials: 'include' })
+      if (!res.ok) {
+        if (res.status === 403) {
+          navigate('/hidden-admin-portal')
+          return
+        }
+        throw new Error('Failed to load analytics data')
+      }
+      const resData = await res.json()
+      setData(resData)
+      setError(null)
+    } catch (err: any) {
+      console.error(err)
+      setError(err.message || 'Analytics load failure')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!user.isAuthenticated || user.role === 'visitor') {
+      navigate('/hidden-admin-portal')
+      return
+    }
+    fetchAnalytics()
+  }, [user.isAuthenticated, user.role])
+
+  const handleApproveListing = async (slug: string) => {
+    if (!window.confirm("Approve this listing and publish it to the showroom?")) return
+    try {
+      const res = await fetch(`/api/listings/${slug}/approve/`, { method: 'POST', credentials: 'include' })
+      const resData = await res.json()
+      if (resData.success) {
+        alert("Listing approved successfully!")
+        fetchAnalytics()
+      } else {
+        alert("Error: " + (resData.error || "Failed to approve"))
+      }
+    } catch (err) {
+      alert("Network request failed")
+    }
+  }
+
+  const handleToggleStatus = async (slug: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'available' ? 'sold' : 'available'
+    const confirmMsg = newStatus === 'sold' 
+      ? "Mark this listing as Sold & Delivered?" 
+      : "Mark this listing as Available again?"
+    if (!window.confirm(confirmMsg)) return
+    
+    try {
+      const res = await fetch(`/api/listings/${slug}/toggle-status/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+        credentials: 'include'
+      })
+      const resData = await res.json()
+      if (resData.success) {
+        alert("Status updated successfully!")
+        fetchAnalytics()
+      } else {
+        alert("Error: " + (resData.error || "Failed to update status"))
+      }
+    } catch (err) {
+      alert("Network request failed")
+    }
+  }
+
+  const handleCategoryChange = async (slug: string, newCat: string) => {
+    try {
+      const res = await fetch(`/api/listings/${slug}/change-category/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category: newCat }),
+        credentials: 'include'
+      })
+      const resData = await res.json()
+      if (resData.success) {
+        alert(`Category updated to ${newCat}!`)
+        fetchAnalytics()
+      } else {
+        alert("Error: " + (resData.error || "Failed to change category"))
+      }
+    } catch (err) {
+      alert("Network request failed")
+    }
+  }
+
+  const handleDeleteListing = async (slug: string) => {
+    if (!window.confirm("⚠️ WARNING: Are you sure you want to permanently delete this listing?")) return
+    try {
+      const res = await fetch(`/api/listings/${slug}/delete/`, { method: 'POST', credentials: 'include' })
+      const resData = await res.json()
+      if (resData.success) {
+        alert("Listing deleted successfully.")
+        fetchAnalytics()
+      } else {
+        alert("Error: " + (resData.error || "Failed to delete listing"))
+      }
+    } catch (err) {
+      alert("Network request failed")
+    }
+  }
+
+  const handleDeleteReview = async (reviewId: number) => {
+    if (!window.confirm("Are you sure you want to delete this customer review?")) return
+    try {
+      const res = await fetch(`/api/reviews/${reviewId}/delete/`, { method: 'POST', credentials: 'include' })
+      const resData = await res.json()
+      if (resData.success) {
+        alert("Review deleted successfully.")
+        fetchAnalytics()
+      } else {
+        alert("Error: " + (resData.error || "Failed to delete review"))
+      }
+    } catch (err) {
+      alert("Network request failed")
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="loading-indicator">
+        <div>
+          <div className="spinner" style={{ margin: '0 auto 16px' }}></div>
+          Loading Admin Control Desk...
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !data) {
+    return (
+      <div className="catalog-container" style={{ marginTop: '40px' }}>
+        <div className="empty-state">
+          <h2 className="empty-state-title">Control Desk Error</h2>
+          <p className="empty-state-text">{error || "Failed to initialize analytics console."}</p>
+          <button onClick={fetchAnalytics} className="btn-submit-form" style={{ marginTop: '20px' }}>
+            Retry
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="dashboard-container">
+      <div className="dashboard-header-bar">
+        <div>
+          <h1 className="dashboard-title">Private Management Console</h1>
+          <p className="dashboard-subtitle">Super Admin / Manager Desk for Cassie's Showroom</p>
+        </div>
+        <div className="dashboard-quick-actions">
+          <button onClick={fetchAnalytics} className="btn-admin-action btn-admin-success">
+            🔄 Refresh Console
+          </button>
+        </div>
+      </div>
+
+      {/* Traffic Analytics Panel */}
+      <section className="analytics-section">
+        <h2 className="dashboard-section-title">📊 Live Traffic Analytics</h2>
+        <div className="analytics-metrics-grid">
+          <div className="metric-card">
+            <span className="metric-title">Total Site Traffic</span>
+            <span className="metric-value">{data.total_views.toLocaleString()}</span>
+            <span className="metric-desc">Lifetime Page Views</span>
           </div>
-
-          <div className="admin-actions-group">
-            {/* Approval privilege for SuperAdmin & Manager Cassie */}
-            {!listing.is_approved ? (
-              <button className="btn-admin btn-admin-approve" onClick={handleApprove}>
-                🚀 Approve (Go Live)
-              </button>
-            ) : (
-              <span style={{ color: '#10B981', fontSize: '0.85rem', fontWeight: 700 }}>
-                ✓ Pushed Live
-              </span>
-            )}
-
-            {/* Quick Category Move Action */}
-            <div className="category-select-wrapper">
-              <label htmlFor="category-switcher" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Move Category:</label>
-              <select
-                id="category-switcher"
-                className="admin-select"
-                value={listing.category}
-                onChange={e => handleCategoryChange(e.target.value)}
-              >
-                <option value="suits">Suits</option>
-                <option value="soaked">Soaked (Art)</option>
-                <option value="property">Houses</option>
-                <option value="vehicle">Cars</option>
-              </select>
-            </div>
-
-            {/* Delete privilege for SuperAdmin & Manager Cassie */}
-            <button className="btn-admin btn-admin-delete" onClick={handleDelete}>
-              🛑 Delete Item
-            </button>
+          <div className="metric-card active-browsers">
+            <span className="metric-title">Active Browsers Right Now</span>
+            <span className="metric-value">{data.active_browsers}</span>
+            <span className="metric-desc">Unique sessions in last 15 min</span>
+          </div>
+          <div className="metric-card">
+            <span className="metric-title">Available Inventory</span>
+            <span className="metric-value">
+              {data.all_listings.filter(l => l.status === 'available').length}
+            </span>
+            <span className="metric-desc">Items in Showroom</span>
+          </div>
+          <div className="metric-card">
+            <span className="metric-title">Delivered Assets</span>
+            <span className="metric-value">
+              {data.all_listings.filter(l => l.status === 'sold').length}
+            </span>
+            <span className="metric-desc">Successful transactions</span>
           </div>
         </div>
+
+        {/* Popular Listings Subpanel */}
+        <div className="dashboard-card">
+          <h3 className="card-inner-title">🔥 Most Viewed Listings</h3>
+          <div className="admin-table-container">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Status</th>
+                  <th>Views</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.popular_listings.map(item => (
+                  <tr key={item.id}>
+                    <td 
+                      onClick={() => navigate(`/listings/${item.slug}`)} 
+                      style={{ cursor: 'pointer', fontWeight: 600, color: 'var(--text-light)' }}
+                      className="hover-underline"
+                    >
+                      {item.title}
+                    </td>
+                    <td style={{ textTransform: 'capitalize' }}>
+                      {CATEGORY_LABELS[item.category] || item.category}
+                    </td>
+                    <td>₦{Number(item.price).toLocaleString()}</td>
+                    <td>
+                      <span className={`status-pill ${item.status}`}>
+                        {item.status}
+                      </span>
+                    </td>
+                    <td style={{ fontWeight: 700, color: 'var(--primary)' }}>
+                      👁️ {item.view_count}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {/* Navigation Submenu tabs */}
+      <div className="dashboard-tabs">
+        <button 
+          className={`dash-tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
+          onClick={() => setActiveTab('overview')}
+        >
+          Inventory & Control
+        </button>
+        <button 
+          className={`dash-tab-btn ${activeTab === 'reviews' ? 'active' : ''}`}
+          onClick={() => setActiveTab('reviews')}
+        >
+          Review Moderation ({data.all_reviews.length})
+        </button>
+      </div>
+
+      {activeTab === 'overview' && (
+        <section className="inventory-section">
+          <div className="dashboard-card">
+            <h3 className="card-inner-title">📦 Total Inventory & Status Control Desk</h3>
+            <div className="admin-table-container">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Asset Title</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Status</th>
+                    <th>Public Visibility</th>
+                    <th>Move Category</th>
+                    <th style={{ textAlign: 'right' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.all_listings.map(item => (
+                    <tr key={item.id}>
+                      <td 
+                        onClick={() => navigate(`/listings/${item.slug}`)} 
+                        style={{ cursor: 'pointer', fontWeight: 600 }}
+                        className="hover-underline"
+                      >
+                        {item.title}
+                      </td>
+                      <td>
+                        <span style={{ textTransform: 'capitalize' }}>
+                          {CATEGORY_LABELS[item.category] || item.category}
+                        </span>
+                      </td>
+                      <td>₦{Number(item.price).toLocaleString()}</td>
+                      <td>
+                        <span className={`status-pill ${item.status}`}>
+                          {item.status}
+                        </span>
+                      </td>
+                      <td>
+                        {item.is_approved ? (
+                          <span style={{ color: '#10B981', fontWeight: 700 }}>✓ Pushed Live</span>
+                        ) : (
+                          <span style={{ color: 'var(--primary)', fontWeight: 700 }}>⏳ Draft / Pending</span>
+                        )}
+                      </td>
+                      <td>
+                        <select
+                          className="admin-select-sm"
+                          value={item.category}
+                          onChange={e => handleCategoryChange(item.slug, e.target.value)}
+                        >
+                          <option value="suits">Suits</option>
+                          <option value="soaked">Soaked (Art)</option>
+                          <option value="property">Houses</option>
+                          <option value="vehicle">Cars</option>
+                        </select>
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                          {!item.is_approved && (
+                            <button 
+                              onClick={() => handleApproveListing(item.slug)}
+                              className="btn-admin-action btn-admin-success"
+                            >
+                              🚀 Approve
+                            </button>
+                          )}
+                          <button 
+                            onClick={() => handleToggleStatus(item.slug, item.status)}
+                            className="btn-admin-action"
+                          >
+                            {item.status === 'available' ? 'Mark Sold' : 'Mark Available'}
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteListing(item.slug)}
+                            className="btn-admin-action btn-admin-danger"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {activeTab === 'reviews' && (
+        <section className="reviews-moderation-section">
+          <div className="dashboard-card">
+            <h3 className="card-inner-title">💬 Customer Reviews Moderation</h3>
+            {data.all_reviews.length === 0 ? (
+              <p style={{ color: 'var(--text-secondary)', padding: '20px', textAlign: 'center', fontStyle: 'italic' }}>
+                No testimonials/reviews have been submitted yet.
+              </p>
+            ) : (
+              <div className="admin-table-container">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Listing</th>
+                      <th>Reviewer</th>
+                      <th>Rating</th>
+                      <th>Comment</th>
+                      <th>Date</th>
+                      <th style={{ textAlign: 'right' }}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.all_reviews.map(rev => (
+                      <tr key={rev.id}>
+                        <td 
+                          onClick={() => navigate(`/listings/${rev.listing_slug}`)}
+                          style={{ cursor: 'pointer', fontWeight: 600 }}
+                          className="hover-underline"
+                        >
+                          {rev.listing_title}
+                        </td>
+                        <td>{rev.reviewer_name}</td>
+                        <td style={{ color: '#FFE600', fontSize: '1.1rem', letterSpacing: '2px' }}>
+                          {"★".repeat(rev.rating) + "☆".repeat(5 - rev.rating)}
+                        </td>
+                        <td style={{ maxWidth: '300px', whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                          “{rev.comment}”
+                        </td>
+                        <td>
+                          {new Date(rev.created_at).toLocaleDateString()}
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <button 
+                            onClick={() => handleDeleteReview(rev.id)}
+                            className="btn-admin-action btn-admin-danger"
+                          >
+                            Delete Review
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </section>
       )}
     </div>
   )
@@ -1203,7 +1546,7 @@ function Login({ user, setUser, navigate }: LoginProps) {
   // Redirect if already logged in
   useEffect(() => {
     if (user.isAuthenticated) {
-      navigate('/')
+      navigate('/admin-dashboard')
     }
   }, [user.isAuthenticated])
 
@@ -1227,7 +1570,7 @@ function Login({ user, setUser, navigate }: LoginProps) {
           username: data.user.username,
           role: data.user.role
         })
-        navigate('/')
+        navigate('/admin-dashboard')
       } else {
         setError(data.error || 'Invalid manager credentials.')
       }
