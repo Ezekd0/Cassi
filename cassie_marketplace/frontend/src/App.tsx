@@ -53,6 +53,19 @@ function App() {
   const [loadingAuth, setLoadingAuth] = useState(true)
   const [menuOpen, setMenuOpen] = useState(false)
   const [category, setCategory] = useState<string>('')
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 40) {
+        setScrolled(true)
+      } else {
+        setScrolled(false)
+      }
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   // --- Get Notified Subscription State ---
   const [subscribeVal, setSubscribeVal] = useState('')
@@ -133,21 +146,7 @@ function App() {
     }
   }
 
-  // --- Header Announcement Slider ---
-  const pitches = [
-    { text: "🏠 Hot Deal: Prime commercial land plots available in Osongama, Uyo", icon: "✨" },
-    { text: "🚘 Superb Deal: Tokunbo vehicles fully cleared in Lagos", icon: "🔥" },
-    { text: "🎨 Original Fine Art: Premium gallery framed abstract canvases", icon: "🖼️" },
-    { text: "👔 Bespoke Luxury: Elegantly tailored Italian 3-piece suits", icon: "✂️" }
-  ]
-  const [pitchIndex, setPitchIndex] = useState(0)
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPitchIndex((prevIndex) => (prevIndex + 1) % pitches.length)
-    }, 4500)
-    return () => clearInterval(interval)
-  }, [pitches.length])
 
   // --- Rendering Routing ---
   const renderRoute = () => {
@@ -156,7 +155,7 @@ function App() {
         <div className="loading-indicator">
           <div>
             <div className="spinner" style={{ margin: '0 auto 16px' }}></div>
-            Loading Cassie's Hub...
+            Initializing Sourcing Desk...
           </div>
         </div>
       )
@@ -166,7 +165,7 @@ function App() {
       return <Home category={category} setCategory={setCategory} navigate={navigate} />
     }
     if (path === '/sold') {
-      return <SoldPortfolio category={category} setCategory={setCategory} navigate={navigate} />
+      return <SoldPortfolio navigate={navigate} />
     }
     if (path === '/hidden-admin-portal') {
       return <Login user={user} setUser={setUser} navigate={navigate} />
@@ -192,20 +191,11 @@ function App() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      {/* Dynamic Announcement Ticker */}
-      <div className="ticker-banner">
-        {pitches.map((pitch, idx) => (
-          <div key={idx} className={`ticker-text ${idx === pitchIndex ? 'active' : ''}`}>
-            <span>{pitch.icon}</span> {pitch.text}
-          </div>
-        ))}
-      </div>
-
       {/* Main Header / Nav */}
-      <header className="main-header">
+      <header className={`main-header ${scrolled ? 'scrolled' : ''}`}>
         <div className="nav-container">
           <div className="logo-anchor" onClick={() => navigate('/')}>
-            CASSIE<span className="logo-accent">HUB</span>
+            LOOKUP<span className="logo-accent">.</span>
           </div>
 
           {/* Desktop Navigation Links */}
@@ -214,37 +204,37 @@ function App() {
               className={`nav-item ${path === '/' && category === '' ? 'active-primary' : ''}`} 
               onClick={() => { setCategory(''); navigate('/') }}
             >
-              Showroom
-            </span>
-            <span 
-              className={`nav-item ${path === '/' && category === 'vehicle' ? 'active-primary' : ''}`} 
-              onClick={() => { setCategory('vehicle'); navigate('/') }}
-            >
-              Cars
+              Home
             </span>
             <span 
               className={`nav-item ${path === '/' && category === 'property' ? 'active-primary' : ''}`} 
               onClick={() => { setCategory('property'); navigate('/') }}
             >
-              Real Estate
+              Properties
+            </span>
+            <span 
+              className={`nav-item ${path === '/' && category === 'vehicle' ? 'active-primary' : ''}`} 
+              onClick={() => { setCategory('vehicle'); navigate('/') }}
+            >
+              Vehicles
             </span>
             <span 
               className={`nav-item ${path === '/' && category === 'suits' ? 'active-primary' : ''}`} 
               onClick={() => { setCategory('suits'); navigate('/') }}
             >
-              Suits
-            </span>
-            <span 
-              className={`nav-item ${path === '/' && category === 'soaked' ? 'active-primary' : ''}`} 
-              onClick={() => { setCategory('soaked'); navigate('/') }}
-            >
-              Soaked
+              Collections
             </span>
             <span 
               className={`nav-item ${path === '/sold' ? 'active-primary' : ''}`} 
               onClick={() => navigate('/sold')}
             >
-              Sold Portfolio
+              Portfolio
+            </span>
+            <span 
+              className="nav-item" 
+              onClick={() => { navigate('/'); setTimeout(() => document.getElementById('contact-lookup')?.scrollIntoView({ behavior: 'smooth' }), 150) }}
+            >
+              Contact
             </span>
             
             {user.isAuthenticated && (
@@ -284,37 +274,37 @@ function App() {
               className={`mobile-nav-item ${path === '/' && category === '' ? 'active' : ''}`} 
               onClick={() => { setCategory(''); navigate('/') }}
             >
-              Showroom
-            </span>
-            <span 
-              className={`mobile-nav-item ${path === '/' && category === 'vehicle' ? 'active' : ''}`} 
-              onClick={() => { setCategory('vehicle'); navigate('/') }}
-            >
-              Cars
+              Home
             </span>
             <span 
               className={`mobile-nav-item ${path === '/' && category === 'property' ? 'active' : ''}`} 
               onClick={() => { setCategory('property'); navigate('/') }}
             >
-              Real Estate
+              Properties
+            </span>
+            <span 
+              className={`mobile-nav-item ${path === '/' && category === 'vehicle' ? 'active' : ''}`} 
+              onClick={() => { setCategory('vehicle'); navigate('/') }}
+            >
+              Vehicles
             </span>
             <span 
               className={`mobile-nav-item ${path === '/' && category === 'suits' ? 'active' : ''}`} 
               onClick={() => { setCategory('suits'); navigate('/') }}
             >
-              Suits
-            </span>
-            <span 
-              className={`mobile-nav-item ${path === '/' && category === 'soaked' ? 'active' : ''}`} 
-              onClick={() => { setCategory('soaked'); navigate('/') }}
-            >
-              Soaked
+              Collections
             </span>
             <span 
               className={`mobile-nav-item ${path === '/sold' ? 'active' : ''}`} 
               onClick={() => navigate('/sold')}
             >
-              Sold Portfolio
+              Portfolio
+            </span>
+            <span 
+              className="mobile-nav-item" 
+              onClick={() => { navigate('/'); setTimeout(() => document.getElementById('contact-lookup')?.scrollIntoView({ behavior: 'smooth' }), 150) }}
+            >
+              Contact
             </span>
             {user.isAuthenticated && (
               <>
@@ -337,7 +327,7 @@ function App() {
       </header>
 
       {/* Page Body */}
-      <main style={{ flex: 1, paddingTop: '75px' }}>
+      <main style={{ flex: 1, paddingTop: '80px' }}>
         {renderRoute()}
       </main>
 
@@ -345,16 +335,16 @@ function App() {
       <footer className="main-footer">
         <div className="footer-content">
           <div className="footer-brand">
-            CASSIE<span className="logo-accent">HUB</span>
+            LOOKUP<span className="logo-accent">.</span>
           </div>
           <p className="footer-pitch">
-            High-ticket asset sourcing, expert tailoring, fine arts, and luxury property marketing. Hand-vetted and custom delivered.
+            Luxury Assets & Exclusive Sourcing. Curated Acquisition and Private Advisory.
           </p>
 
-          {/* "Get Notified" Premium Newsletter Capture Form */}
+          {/* "Get Notified" Premium Capturer */}
           <div className="footer-subscribe-box">
             <h3 className="subscribe-title">GET NOTIFIED ON NEW DROPS</h3>
-            <p className="subscribe-desc">Subscribe to WhatsApp or Email alerts for exclusive properties, vehicles, and tailored suits.</p>
+            <p className="subscribe-desc">Subscribe to WhatsApp or Email alerts for exclusive properties, vehicles, and fashion collections.</p>
             <form onSubmit={handleSubscribe} className="subscribe-form">
               <input
                 type="text"
@@ -371,25 +361,35 @@ function App() {
             {subscribeMsg && <p className="subscribe-msg">{subscribeMsg}</p>}
           </div>
 
+          <div className="footer-contact-details">
+            <p>📍 Osongama, Uyo / Ikeja, Lagos</p>
+            <p>📞 +234 814 871 4875 &bull; ✉️ acquire@lookup.com</p>
+          </div>
+
           <div className="footer-social-nodes">
+            <a href="https://instagram.com" className="social-node-btn" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+              <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/>
+              </svg>
+            </a>
             <a href="https://facebook.com" className="social-node-btn" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+              <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z"/>
               </svg>
             </a>
             <a href="https://tiktok.com" className="social-node-btn" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
-              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+              <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.17-2.86-.74-3.94-1.72-.01 2.92.01 5.84-.02 8.75-.18 1.96-1.11 3.86-2.73 5.01-1.63 1.2-3.79 1.7-5.81 1.4-2.02-.27-3.92-1.42-5.06-3.13-1.2-1.74-1.57-4.04-1.04-6.11.5-2.01 1.84-3.8 3.71-4.7 1.83-.93 4.07-1.01 5.97-.22V9.43c-1.39-.67-3.09-.59-4.39.26-1.35.84-2.23 2.38-2.31 3.97-.13 1.6.58 3.25 1.84 4.21 1.24.99 2.99 1.25 4.5 0.72 1.51-.5 2.62-1.92 2.76-3.52.09-1.97.03-3.95.05-5.92-.01-3.04-.01-6.08-.01-9.12z"/>
               </svg>
             </a>
-            <a href="https://instagram.com" className="social-node-btn" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/>
+            <a href="https://linkedin.com" className="social-node-btn" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+              <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
               </svg>
             </a>
           </div>
           <p className="footer-copyright">
-            &copy; {new Date().getFullYear()} Cassie Marketing & Creative Ltd. All rights reserved.
+            &copy; {new Date().getFullYear()} LOOKUP. All Rights Reserved.
           </p>
         </div>
       </footer>
@@ -397,143 +397,22 @@ function App() {
   )
 }
 
-// ==========================================
-// 1. HOME VIEW (Active Listings Showroom)
-// ==========================================
-interface HomeProps {
-  category: string;
-  setCategory: (cat: string) => void;
-  navigate: (to: string) => void;
-}
-
-function Home({ category, setCategory, navigate }: HomeProps) {
-  const [listings, setListings] = useState<Listing[]>([])
-  const [loading, setLoading] = useState(true)
-  const [announcementOpen, setAnnouncementOpen] = useState(true)
-
-  useEffect(() => {
-    setLoading(true)
-    const url = category ? `/api/listings/?category=${category}` : '/api/listings/'
-    fetch(url)
-      .then(res => res.json())
-      .then(data => {
-        setListings(data.listings)
-        setLoading(false)
-      })
-      .catch(err => {
-        console.error('Failed to fetch listings', err)
-        setLoading(false)
-      })
-  }, [category])
-
-  // Map backend categorisation to frontend display names
-  const tabs = [
-    { label: 'All Showroom', value: '' },
-    { label: 'Suits', value: 'suits' },
-    { label: 'Soaked (Art)', value: 'soaked' },
-    { label: 'Houses', value: 'property' },
-    { label: 'Cars', value: 'vehicle' }
-  ]
-
-  const categories = [
-    { id: 'suits', name: 'Exclusive Suits', icon: '👔' },
-    { id: 'soaked', name: 'Soaked (Fine Art)', icon: '🎨' },
-    { id: 'property', name: 'Houses & Plots', icon: '🏠' },
-    { id: 'vehicle', name: 'Premium Cars', icon: '🚘' }
-  ]
-
-  const renderedCategories = category
-    ? [{ id: category, name: tabs.find(t => t.value === category)?.label || category, icon: '' }]
-    : categories;
-
-  return (
-    <div>
-      <section className="hero-section">
-        <h1 className="hero-title">CASSIE'S LUXURY SHOWROOM</h1>
-        <p className="hero-subtitle">
-          Curated collection of high-ticket assets and premium items.
-        </p>
-      </section>
-
-      {announcementOpen && (
-        <div className="announcement-pop-card">
-          <div className="announcement-content">
-            <span className="announcement-badge-pill">Sourcing Update</span>
-            <p className="announcement-message">
-              ✨ <strong>Sourcing Drops:</strong> Prime land plots in Osongama, Uyo, premium cars, and tailored Italian suits are now live. Inquire directly on WhatsApp.
-            </p>
-          </div>
-          <button className="announcement-close-btn" onClick={() => setAnnouncementOpen(false)} aria-label="Dismiss Announcement">
-            &times;
-          </button>
-        </div>
-      )}
-
-      {/* Tabs Menu */}
-      <div className="tabs-container">
-        <div className="tabs-wrapper">
-          {tabs.map(tab => (
-            <button
-              key={tab.value}
-              className={`tab-btn ${category === tab.value ? 'active' : ''}`}
-              onClick={() => setCategory(tab.value)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="catalog-container">
-        {loading ? (
-          <div className="loading-indicator">
-            <div>
-              <div className="spinner" style={{ margin: '0 auto 16px' }}></div>
-              Fetching active listings...
-            </div>
-          </div>
-        ) : listings.length === 0 ? (
-          <div className="empty-state">
-            <h2 className="empty-state-title">No Listings Found</h2>
-            <p className="empty-state-text">There are currently no items available in this category.</p>
-          </div>
-        ) : (
-          renderedCategories.map(cat => {
-            const catListings = category ? listings : listings.filter(item => item.category === cat.id);
-            if (catListings.length === 0) return null;
-            return (
-              <div key={cat.id} className="category-group-section">
-                <h2 className="category-section-title">{cat.icon} {cat.name}</h2>
-                <div className="listings-grid swipeable-row">
-                  {catListings.map(item => (
-                    <ListingCard key={item.id} listing={item} onClick={() => navigate(`/listings/${item.slug}`)} />
-                  ))}
-                </div>
-              </div>
-            )
-          })
-        )}
-      </div>
-    </div>
-  )
-}
+// Duplicate Home component removed.
 
 // ==========================================
 // 2. DELIVERED SHOWCASE (Sold Listings)
 // ==========================================
 interface SoldPortfolioProps {
-  category: string;
-  setCategory: (cat: string) => void;
   navigate: (to: string) => void;
 }
 
-function SoldPortfolio({ category, setCategory, navigate }: SoldPortfolioProps) {
+function SoldPortfolio({ navigate }: SoldPortfolioProps) {
   const [listings, setListings] = useState<Listing[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     setLoading(true)
-    const url = category ? `/api/listings/sold/?category=${category}` : '/api/listings/sold/'
+    const url = '/api/listings/sold/'
     fetch(url)
       .then(res => res.json())
       .then(data => {
@@ -544,49 +423,13 @@ function SoldPortfolio({ category, setCategory, navigate }: SoldPortfolioProps) 
         console.error('Failed to fetch sold showcase', err)
         setLoading(false)
       })
-  }, [category])
-
-  const tabs = [
-    { label: 'All Delivered', value: '' },
-    { label: 'Suits', value: 'suits' },
-    { label: 'Soaked (Art)', value: 'soaked' },
-    { label: 'Houses', value: 'property' },
-    { label: 'Cars', value: 'vehicle' }
-  ]
-
-  const categories = [
-    { id: 'suits', name: 'Exclusive Suits', icon: '👔' },
-    { id: 'soaked', name: 'Soaked (Fine Art)', icon: '🎨' },
-    { id: 'property', name: 'Houses & Plots', icon: '🏠' },
-    { id: 'vehicle', name: 'Premium Cars', icon: '🚘' }
-  ]
-
-  const renderedCategories = category
-    ? [{ id: category, name: tabs.find(t => t.value === category)?.label || category, icon: '' }]
-    : categories;
+  }, [])
 
   return (
-    <div>
-      <section className="hero-section">
-        <h1 className="hero-title">DELIVERED SHOWCASE</h1>
-        <p className="hero-subtitle">
-          Social proof portfolio of premium assets sourced, cleared, and successfully delivered by Cassie.
-        </p>
-      </section>
-
-      {/* Tabs Menu */}
-      <div className="tabs-container">
-        <div className="tabs-wrapper">
-          {tabs.map(tab => (
-            <button
-              key={tab.value}
-              className={`tab-btn ${category === tab.value ? 'active' : ''}`}
-              onClick={() => setCategory(tab.value)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+    <div className="showroom-view-container">
+      <div className="showroom-header">
+        <h2 className="showroom-category-title">Success Stories</h2>
+        <p className="showroom-category-subtitle">Social proof portfolio of premium assets vetted and successfully delivered by LOOKUP</p>
       </div>
 
       <div className="catalog-container">
@@ -594,33 +437,29 @@ function SoldPortfolio({ category, setCategory, navigate }: SoldPortfolioProps) 
           <div className="loading-indicator">
             <div>
               <div className="spinner" style={{ margin: '0 auto 16px' }}></div>
-              Fetching sold showcase...
+              Loading recent acquisitions...
             </div>
           </div>
         ) : listings.length === 0 ? (
           <div className="empty-state">
-            <h2 className="empty-state-title">No Delivered Assets</h2>
-            <p className="empty-state-text">No listings marked as sold in this category yet.</p>
+            <h2 className="empty-state-title">No Recent Transactions</h2>
+            <p className="empty-state-text">No success stories currently matching this layout.</p>
           </div>
         ) : (
-          renderedCategories.map(cat => {
-            const catListings = category ? listings : listings.filter(item => item.category === cat.id);
-            if (catListings.length === 0) return null;
-            return (
-              <div key={cat.id} className="category-group-section">
-                <h2 className="category-section-title">{cat.icon} {cat.name}</h2>
-                <div className="listings-grid swipeable-row">
-                  {catListings.map(item => (
-                    <ListingCard key={item.id} listing={item} onClick={() => navigate(`/listings/${item.slug}`)} />
-                  ))}
-                </div>
-              </div>
-            )
-          })
+          <div className="category-group-section">
+            <div className="listings-grid swipeable-row">
+              {listings.map(item => (
+                <ListingCard key={item.id} listing={item} onClick={() => navigate(`/listings/${item.slug}`)} />
+              ))}
+            </div>
+          </div>
         )}
       </div>
+
+      {/* CONTACT CTA SECTION */}
+      <ContactCTA />
     </div>
-  )
+  );
 }
 
 // ==========================================
@@ -837,7 +676,7 @@ function Detail({ slug, navigate }: DetailProps) {
 
   // WhatsApp click query link builder
   const whatsappUrl = `https://wa.me/${listing.contact_phone}?text=${encodeURIComponent(
-    `Hi Cassie! I saw the listing "${listing.title}" (₦${Number(listing.price).toLocaleString()}) in Uyo/Lagos on your Hub. Is this available? Here is the link: ${window.location.href}`
+    `Hi LOOKUP! I saw the listing "${listing.title}" (₦${Number(listing.price).toLocaleString()}) on your platform. Is this available? Here is the link: ${window.location.href}`
   )}`
 
   return (
@@ -892,7 +731,7 @@ function Detail({ slug, navigate }: DetailProps) {
               </span>
               {listing.is_verified && (
                 <span className="badge-item badge-verified" style={{ position: 'static' }}>
-                  ✓ Hand-Vetted By Cassie
+                  ✓ Hand-Vetted & Verified
                 </span>
               )}
               {listing.status === 'sold' ? (
@@ -1151,8 +990,349 @@ function Detail({ slug, navigate }: DetailProps) {
         </section>
       )}
 
+      {/* CONTACT CTA SECTION */}
+      <ContactCTA />
     </div>
   )
+}
+
+// ==========================================
+// PORTFOLIO CAROUSEL (Success Stories / Sold Listings)
+// ==========================================
+interface PortfolioCarouselProps {
+  listings: Listing[];
+  navigate: (to: string) => void;
+}
+
+function PortfolioCarousel({ listings, navigate }: PortfolioCarouselProps) {
+  const soldItems = listings.filter(l => l.status === 'sold');
+  if (soldItems.length === 0) return null;
+
+  return (
+    <section className="portfolio-section-lux">
+      <div className="section-header-center">
+        <span className="section-subtitle">COMPLETED TRANSACTIONS</span>
+        <h2 className="section-title-premium">Success Stories</h2>
+      </div>
+      <div className="listings-grid swipeable-row">
+        {soldItems.map(item => (
+          <ListingCard key={item.id} listing={item} onClick={() => navigate(`/listings/${item.slug}`)} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ==========================================
+// CONTACT CALL-TO-ACTION (Visual Strength before Footer)
+// ==========================================
+function ContactCTA() {
+  const whatsappUrl = "https://wa.me/2348148714875?text=Hi%20LOOKUP!%20I%20am%20interested%20in%20initiating%20a%20private%20sourcing%20request.";
+
+  return (
+    <section id="contact-lookup" className="contact-cta-section-lux">
+      <div className="contact-cta-card">
+        <h2 className="contact-cta-title">Ready To Acquire Something Exceptional?</h2>
+        <p className="contact-cta-desc">
+          Initiate a private consulting conversation with our sourcing desk. Absolute discretion guaranteed.
+        </p>
+        <div className="contact-cta-buttons">
+          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="btn-contact-lux-whatsapp">
+            <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24" style={{ marginRight: '6px' }}>
+              <path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.96 9.96 0 001.333 4.993L2 22l5.233-1.371a9.936 9.936 0 004.777 1.22c5.507 0 9.99-4.477 9.991-9.985C22.002 6.478 17.519 2 12.012 2zm0 17.117a8.106 8.106 0 01-4.137-1.127l-.297-.177-3.076.806.82-3.001-.194-.31a8.108 8.108 0 01-1.246-4.326c.001-4.469 3.64-8.105 8.131-8.105 4.488 0 8.127 3.636 8.128 8.106-.002 4.47-3.64 8.107-8.129 8.107zm4.457-6.091c-.244-.122-1.44-.71-1.662-.792-.222-.081-.383-.122-.544.122-.161.243-.623.792-.763.953-.14.161-.28.18-.524.059-.244-.122-1.03-.38-1.962-1.212-.725-.647-1.214-1.447-1.356-1.69-.142-.243-.015-.375.107-.496.11-.11.244-.284.366-.426.122-.142.162-.243.243-.406.082-.162.041-.304-.02-.426-.062-.122-.544-1.31-.746-1.795-.197-.474-.397-.41-.544-.418h-.466c-.161 0-.423.061-.644.304-.221.243-.845.826-.845 2.013s.865 2.33 1.057 2.585c.192.256 1.703 2.6 4.126 3.646.576.249 1.026.398 1.378.509.578.184 1.103.158 1.518.096.463-.069 1.44-.588 1.642-1.157.202-.569.202-1.056.141-1.157-.061-.101-.223-.162-.466-.284z" />
+            </svg>
+            WhatsApp Sourcing Desk
+          </a>
+          <a href="mailto:acquire@lookup.com?subject=Private%20Sourcing%20Request" className="btn-contact-lux-primary">
+            Request Sourcing
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ==========================================
+// 1. HOME VIEW (Active Listings Showroom)
+// ==========================================
+interface HomeProps {
+  category: string;
+  setCategory: (cat: string) => void;
+  navigate: (to: string) => void;
+}
+
+function Home({ category, setCategory, navigate }: HomeProps) {
+  const [listings, setListings] = useState<Listing[]>([])
+  const [loading, setLoading] = useState(true)
+  const [announcementOpen, setAnnouncementOpen] = useState(true)
+
+  useEffect(() => {
+    setLoading(true)
+    const url = '/api/listings/'
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        setListings(data.listings)
+        setLoading(false)
+      })
+      .catch(err => {
+        console.error('Failed to fetch listings', err)
+        setLoading(false)
+      })
+  }, [])
+
+  if (category === '') {
+    const propertyImg = listings.find(l => l.category === 'property')?.main_image || '/media/listings/main/luxury_house_uyo_1780731892956.jpg';
+    const vehicleImg = listings.find(l => l.category === 'vehicle')?.main_image || '/media/listings/main/luxury_car_mercedes_1780731913570.jpg';
+    const fashionImg = listings.find(l => l.category === 'suits')?.main_image || '/media/listings/main/luxury_art_painting_1780820718001.jpg';
+    const artImg = listings.find(l => l.category === 'soaked')?.main_image || '/media/listings/main/luxury_art_painting_1780820718001.jpg';
+
+    return (
+      <div>
+        {/* HERO SECTION */}
+        <section className="hero-section">
+          <div className="hero-content">
+            <span className="hero-brand-name">LOOKUP</span>
+            <h1 className="hero-tagline">Luxury Assets. Curated Exclusively.</h1>
+            <p className="hero-desc-items">
+              Premium Properties &bull; Luxury Vehicles &bull; Fine Art &bull; Exclusive Collections
+            </p>
+            <div className="hero-action-buttons">
+              <button onClick={() => setCategory('property')} className="btn-hero-primary">
+                Explore Collection
+              </button>
+              <a href="#contact-lookup" className="btn-hero-secondary">
+                Contact Us
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {announcementOpen && (
+          <div className="announcement-pop-card">
+            <div className="announcement-content">
+              <span className="announcement-badge-pill">Sourcing Update</span>
+              <p className="announcement-message">
+                ✨ <strong>Sourcing Drops:</strong> Prime land plots in Osongama, Uyo, premium cars, and tailored Italian suits are now live. Inquire directly on WhatsApp.
+              </p>
+            </div>
+            <button className="announcement-close-btn" onClick={() => setAnnouncementOpen(false)} aria-label="Dismiss Announcement">
+              &times;
+            </button>
+          </div>
+        )}
+
+        {/* FEATURED COLLECTIONS SECTION */}
+        <section className="featured-collections-section">
+          <div className="section-header-center">
+            <span className="section-subtitle">CURATED CATEGORIES</span>
+            <h2 className="section-title-premium">Featured Collections</h2>
+          </div>
+          <div className="collections-grid-lux">
+            <div className="collection-card-lux">
+              <div className="coll-card-media">
+                <img src={propertyImg} alt="Properties" />
+              </div>
+              <div className="coll-card-body">
+                <h3>Properties</h3>
+                <p>Curated commercial plots, luxury villas, and high-value real estate assets vetted for title integrity.</p>
+                <button onClick={() => setCategory('property')} className="btn-coll-explore">
+                  Explore Collection
+                </button>
+              </div>
+            </div>
+
+            <div className="collection-card-lux">
+              <div className="coll-card-media">
+                <img src={vehicleImg} alt="Vehicles" />
+              </div>
+              <div className="coll-card-body">
+                <h3>Vehicles</h3>
+                <p>Acquiring clean imported exotics, premium SUVs, and luxury sedans with zero active computer fault codes.</p>
+                <button onClick={() => setCategory('vehicle')} className="btn-coll-explore">
+                  Explore Collection
+                </button>
+              </div>
+            </div>
+
+            <div className="collection-card-lux">
+              <div className="coll-card-media">
+                <img src={fashionImg} alt="Fashion" />
+              </div>
+              <div className="coll-card-body">
+                <h3>Fashion</h3>
+                <p>Custom executive tailored Italian wool suits, custom design styling, and elite wardrobe curation.</p>
+                <button onClick={() => setCategory('suits')} className="btn-coll-explore">
+                  Explore Collection
+                </button>
+              </div>
+            </div>
+
+            <div className="collection-card-lux">
+              <div className="coll-card-media">
+                <img src={artImg} alt="Fine Art" />
+              </div>
+              <div className="coll-card-body">
+                <h3>Art</h3>
+                <p>Original modern abstract paintings, framed canvases, and certified bespoke art sourcing commissions.</p>
+                <button onClick={() => setCategory('soaked')} className="btn-coll-explore">
+                  Explore Collection
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* WHY LOOKUP SECTION */}
+        <section className="why-lookup-section">
+          <div className="section-header-center">
+            <span className="section-subtitle">THE LOOKUP EDGE</span>
+            <h2 className="section-title-premium">Why Clients Choose LOOKUP</h2>
+          </div>
+          <div className="why-lookup-grid">
+            <div className="why-card">
+              <div className="why-icon">🛡️</div>
+              <h4>Verified Assets</h4>
+              <p>Every single asset passes a rigorous assessment: wall crack scans for villas, OBD2 diagnostics for cars.</p>
+            </div>
+            <div className="why-card">
+              <div className="why-icon">💎</div>
+              <h4>Exclusive Opportunities</h4>
+              <p>Gain access to private, off-market opportunities not listed anywhere else on the public domain.</p>
+            </div>
+            <div className="why-card">
+              <div className="why-icon">🤫</div>
+              <h4>Private Sourcing</h4>
+              <p>Absolute discretion for elite clients seeking high-value asset sourcing, acquisitions, and negotiations.</p>
+            </div>
+            <div className="why-card">
+              <div className="why-icon">✨</div>
+              <h4>Premium Client Experience</h4>
+              <p>Exquisite bespoke guidance through our concierge sourcing desk, from intake request to final delivery.</p>
+            </div>
+            <div className="why-card">
+              <div className="why-icon">🤝</div>
+              <h4>Trusted Network</h4>
+              <p>Direct links to verified developer networks, elite custom tailors, and certified fine art galleries.</p>
+            </div>
+            <div className="why-card">
+              <div className="why-icon">👤</div>
+              <h4>Personalized Acquisition Support</h4>
+              <p>Your dedicated acquisition manager coordinates logistics, shipping, clearance, and vetting protocols.</p>
+            </div>
+          </div>
+        </section>
+
+        {/* TRUST & PROCESS SECTION */}
+        <section className="trust-process-section">
+          <div className="section-header-center">
+            <span className="section-subtitle">ACQUISITION PATHWAY</span>
+            <h2 className="section-title-premium">Trust & Process</h2>
+          </div>
+          <div className="process-timeline">
+            <div className="process-step">
+              <div className="step-number">01</div>
+              <h4>Request</h4>
+              <p>Client submits specific acquisition requirements, parameters, budget, and timing preferences.</p>
+            </div>
+            <div className="process-step">
+              <div className="step-number">02</div>
+              <h4>Verification</h4>
+              <p>Our technical team performs rigorous physical and legal title integrity audits on potential matches.</p>
+            </div>
+            <div className="process-step">
+              <div className="step-number">03</div>
+              <h4>Presentation</h4>
+              <p>Receive a private, comprehensive presentation containing verified matches and diagnostic scans.</p>
+            </div>
+            <div className="process-step">
+              <div className="step-number">04</div>
+              <h4>Acquisition</h4>
+              <p>Discreet transaction facilitation, logistics clearing, custom styling, or physical handover delivery.</p>
+            </div>
+          </div>
+        </section>
+
+        {/* PORTFOLIO SECTION */}
+        <PortfolioCarousel listings={listings} navigate={navigate} />
+
+        {/* CONTACT CTA SECTION */}
+        <ContactCTA />
+      </div>
+    );
+  }
+
+  const catListings = listings.filter(item => item.category === category && item.is_approved);
+  const activeTabName = CATEGORY_LABELS[category] || category;
+
+  return (
+    <div className="showroom-view-container">
+      <div className="showroom-header">
+        <h2 className="showroom-category-title">{activeTabName} Sourcing Collection</h2>
+        <p className="showroom-category-subtitle">Vetted, verified, and ready for acquisition</p>
+      </div>
+
+      <div className="tabs-container">
+        <div className="tabs-wrapper">
+          <button className={`tab-btn ${category === 'property' ? 'active' : ''}`} onClick={() => setCategory('property')}>
+            Properties
+          </button>
+          <button className={`tab-btn ${category === 'vehicle' ? 'active' : ''}`} onClick={() => setCategory('vehicle')}>
+            Vehicles
+          </button>
+          <button className={`tab-btn ${category === 'suits' ? 'active' : ''}`} onClick={() => setCategory('suits')}>
+            Fashion
+          </button>
+          <button className={`tab-btn ${category === 'soaked' ? 'active' : ''}`} onClick={() => setCategory('soaked')}>
+            Art
+          </button>
+        </div>
+      </div>
+
+      <div className="catalog-container">
+        {loading ? (
+          <div className="loading-indicator">
+            <div>
+              <div className="spinner" style={{ margin: '0 auto 16px' }}></div>
+              Verifying inventory database...
+            </div>
+          </div>
+        ) : catListings.length === 0 ? (
+          <div className="empty-state">
+            <h2 className="empty-state-title">Collection Private</h2>
+            <p className="empty-state-text">All items in this category are undergoing private intake verification. Contact our sourcing team for private matching.</p>
+          </div>
+        ) : (
+          <div className="category-group-section">
+            <div className="listings-grid swipeable-row">
+              {catListings.map(item => (
+                <ListingCard key={item.id} listing={item} onClick={() => navigate(`/listings/${item.slug}`)} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {listings.filter(l => l.category !== category && l.is_approved).length > 0 && (
+        <section className="discover-section" style={{ borderTop: '1px solid var(--border-glass)', paddingTop: '60px', marginTop: '60px' }}>
+          <h2 className="discover-title">Discover Other Premium Opportunities</h2>
+          <div className="listings-grid swipeable-row">
+            {listings
+              .filter(l => l.category !== category && l.is_approved)
+              .sort(() => 0.5 - Math.random())
+              .slice(0, 4)
+              .map(item => (
+                <ListingCard key={item.id} listing={item} onClick={() => navigate(`/listings/${item.slug}`)} />
+              ))
+            }
+          </div>
+        </section>
+      )}
+
+      {/* CONTACT CTA SECTION */}
+      <ContactCTA />
+    </div>
+  );
 }
 
 // ==========================================
