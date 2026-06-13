@@ -12,6 +12,23 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+# Automatically rewrite direct Supabase IPv6 host to IPv4 pooler to bypass Render/outbound network limits
+db_url = os.getenv('DATABASE_URL')
+if db_url:
+    # 1. Fix password typo if present
+    if '0701747469lVi' in db_url:
+        db_url = db_url.replace('0701747469lVi', '07017474691Vi')
+    
+    # 2. Redirect from direct IPv6 connection to IPv4 connection pooler
+    if 'db.szkvjislddxtefoyioah.supabase.co' in db_url:
+        db_url = db_url.replace('db.szkvjislddxtefoyioah.supabase.co', 'aws-0-eu-west-1.pooler.supabase.com')
+        # Add host routing prefix to the username
+        db_url = db_url.replace('://postgres:', '://postgres.szkvjislddxtefoyioah:')
+        # Rewrite port 5432 to 6543
+        db_url = db_url.replace(':5432/', ':6543/')
+    
+    os.environ['DATABASE_URL'] = db_url
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
