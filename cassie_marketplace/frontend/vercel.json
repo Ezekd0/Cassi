@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://cassie-marketplace-backend.onrender.com/api/:path*"
+      "destination": "https://cassi-hrqq.onrender.com/api/:path*"
     },
     {
       "source": "/media/:path*",
-      "destination": "https://cassie-marketplace-backend.onrender.com/media/:path*"
+      "destination": "https://cassi-hrqq.onrender.com/media/:path*"
     },
     {
       "source": "/(.*)",
