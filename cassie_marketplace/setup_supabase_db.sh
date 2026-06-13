@@ -5,9 +5,15 @@ echo "===================================================="
 echo "   NOXHUB SUPABASE DATABASE SETUP & MIGRATION DESK  "
 echo "===================================================="
 
-# Check if .env has the password configured
-if grep -q "\[YOUR-PASSWORD\]" .env; then
-  echo "❌ Error: Please update the password in your .env file first."
+# Check if .env file exists
+if [ ! -f .env ]; then
+  echo "❌ Error: .env file not found. Please ensure you have created it in the project root."
+  exit 1
+fi
+
+# Check if .env has the placeholder password configured
+if grep -q -F "[YOUR-PASSWORD]" .env; then
+  echo "❌ Error: Please update the placeholder [YOUR-PASSWORD] in your .env file with your actual password."
   exit 1
 fi
 
