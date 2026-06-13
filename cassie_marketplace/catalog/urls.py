@@ -1,7 +1,9 @@
 from django.urls import path
+from django.views.generic.base import RedirectView
 from . import views
 
 urlpatterns = [
+    path('', RedirectView.as_view(url='/admin/', permanent=False)),
     path('api/listings/', views.api_catalog_home, name='catalog_home'),
     path('api/listings/sold/', views.api_sold_showcase, name='sold_showcase'),
     path('api/listings/<slug:slug>/', views.api_listing_detail, name='listing_detail'),
