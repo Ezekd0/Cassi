@@ -24,3 +24,6 @@ cassie_marketplace/frontend/.env.production.local
 # OS files
 .DS_Store
 Thumbs.db
+
+# Environment variables
+cassie_marketplace/.env
