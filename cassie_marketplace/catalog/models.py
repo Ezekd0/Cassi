@@ -36,7 +36,7 @@ class Listing(models.Model):
     
     # State Parameters
     is_verified = models.BooleanField(default=True)
-    is_approved = models.BooleanField(default=False)
+    is_approved = models.BooleanField(default=True)
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='available')
     contact_phone = models.CharField(max_length=20, default="2348148714875")
     created_at = models.DateTimeField(auto_now_add=True)
