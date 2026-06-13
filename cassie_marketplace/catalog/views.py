@@ -302,12 +302,21 @@ def api_analytics(request):
         'created_at': r.created_at.isoformat()
     } for r in all_reviews]
 
+    # Subscriptions (leads)
+    all_subscriptions = Subscription.objects.all().order_by('-created_at')
+    all_subs_data = [{
+        'id': s.id,
+        'contact_info': s.contact_info,
+        'created_at': s.created_at.isoformat()
+    } for s in all_subscriptions]
+
     return JsonResponse({
         'total_views': total_views,
         'active_browsers': active_browsers,
         'popular_listings': popular_data,
         'all_listings': all_listings_data,
-        'all_reviews': all_reviews_data
+        'all_reviews': all_reviews_data,
+        'all_subscriptions': all_subs_data
     })
 
 
